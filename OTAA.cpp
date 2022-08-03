@@ -2,22 +2,10 @@
 #include <ArduinoJson.h>
 #include "fsm.h"
 #include "heartbeat.h"
+#include "secrets.h"
 
 #define OTAA_PERIOD (20000)
-/*************************************
 
-   LoRaWAN band setting:
-     RAK_REGION_EU433
-     RAK_REGION_CN470
-     RAK_REGION_RU864
-     RAK_REGION_IN865
-     RAK_REGION_EU868
-     RAK_REGION_US915
-     RAK_REGION_AU915
-     RAK_REGION_KR920
-     RAK_REGION_AS923
-
- *************************************/
 bool sending = false;
 bool receiving = false;
 
