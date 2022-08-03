@@ -1,17 +1,17 @@
 #include <Arduino.h>
-// #include <avr/eeprom.h>
+#include <ArduinoJson.h>
 #include "fsm.h"
 #include "door.h"
 #include "sensor.h"
 #include "OTAA.h"
 #include "flashAddresses.h"
 
+stateHandler_t stateHandler = state0_idle;
+unsigned int lastStateHandleTime = millis();
+
 static unsigned int COUNTDOWN_TIMER = 0;
 static unsigned int DURATION_TIMER = 0;
 static unsigned int STILLNESS_TIMER = 0;
-
-stateHandler_t stateHandler = state0_idle;
-unsigned int lastStateHandleTime = millis();
 
 int state0_idle_timer = 0;
 int state1_15sCountdown_timer = 0;
@@ -50,6 +50,21 @@ bool setStillnessTimer(unsigned int timer)
     bool success = api.system.flash.set(STILLNESS_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(STILLNESS_TIMER));
     STILLNESS_TIMER = timer;
     return success;
+}
+
+unsigned int getCountdownTimer()
+{
+    return COUNTDOWN_TIMER;
+}
+
+unsigned int getDurationTimer()
+{
+    return DURATION_TIMER;
+}
+
+unsigned int getStillnessTimer()
+{
+    return STILLNESS_TIMER;
 }
 
 int state0_idle()
@@ -107,7 +122,9 @@ int state2_duration()
     {
         stateHandler = state0_idle;
         Serial.println("Duration Alert!!");
-        uplink_routine("DurationAlert");
+        DynamicJsonDocument doc(1024); 
+        doc["alertType"] = "DurationAlert"; 
+        uplink_routine(doc);
         Serial.println("state 2 -> state 0: duration alert");
         return 1;
     }
@@ -136,7 +153,9 @@ int state3_stillness()
     {
         stateHandler = state0_idle;
         Serial.println("Stillness Alert!!");
-        uplink_routine("StillnessAlert");
+        DynamicJsonDocument doc(1024); 
+        doc["alertType"] = "StillnessAlert"; 
+        uplink_routine(doc);
         Serial.println("state 3 -> state 0: stillness alert");
         return 1;
     }
@@ -144,7 +163,9 @@ int state3_stillness()
     {
         stateHandler = state0_idle;
         Serial.println("Duration Alert!!");
-        uplink_routine("DurationAlert");
+        DynamicJsonDocument doc(1024); 
+        doc["alertType"] = "DurationAlert"; 
+        uplink_routine(doc);
         Serial.println("state 3 -> state 0: duration alert");
         return 1;
     }

@@ -7,6 +7,14 @@
 void setupFSM();
 
 /**
+ * timer getters
+ * @returns the current timer value in ms
+ */
+unsigned int getCountdownTimer();
+unsigned int getDurationTimer(); 
+unsigned int getStillnessTimer(); 
+
+/**
  * sets the countdown timer value stored in flash memory
  * @param countdownTimer the countdown timer value to store in ms
  * @returns true if successful, false otherwise

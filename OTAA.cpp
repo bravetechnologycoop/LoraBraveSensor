@@ -3,6 +3,7 @@
 #include "fsm.h"
 #include "heartbeat.h"
 #include "secrets.h"
+#include "battery.h"
 
 #define OTAA_PERIOD (20000)
 
@@ -155,7 +156,6 @@ void setupOTAA()
   api.lorawan.daddr.get(assigned_dev_addr, 4);
   Serial.printf("Device Address is %02X%02X%02X%02X\r\n", assigned_dev_addr[0], assigned_dev_addr[1], assigned_dev_addr[2], assigned_dev_addr[3]); // Check Device Address
   Serial.printf("Uplink period is %ums\r\n", OTAA_PERIOD);
-  Serial.println("");
   api.lorawan.registerRecvCallback(recvCallback);
   api.lorawan.registerJoinCallback(joinCallback);
   api.lorawan.registerSendCallback(sendCallback);
@@ -167,15 +167,11 @@ void uplink_routine(char *payload)
   /** Payload of Uplink */
   uint8_t data_len = 0;
   /** Packet buffer for sending */
-  uint8_t collected_data[64] = {0};
-  for (int i = 0; i < 64 && i < strlen(payload); i++)
+  uint8_t collected_data[strlen(payload)] = {0};
+  for (int i = 0; i < strlen(payload); i++)
   {
     collected_data[data_len++] = (uint8_t)payload[i];
   }
-  // collected_data[data_len++] = (uint8_t) 't';
-  // collected_data[data_len++] = (uint8_t) 'e';
-  // collected_data[data_len++] = (uint8_t) 's';
-  // collected_data[data_len++] = (uint8_t) 't';
 
   Serial.println("Data Packet:");
   for (int i = 0; i < data_len; i++)
@@ -193,6 +189,7 @@ void uplink_routine(char *payload)
   else
   {
     Serial.println("Sending request failed");
+    api.lorawan.send(data_len, (uint8_t *)&collected_data, 2, true, 3); 
   }
   while (sending)
   {
@@ -207,4 +204,17 @@ void uplink_routine(char *payload)
   }
   delay(1500); // for acknowledgement to be sent
   Serial.println("End of uplink routine");
+}
+
+void uplink_routine(DynamicJsonDocument doc) {
+    doc["battery"] = getBatteryLevel();
+    doc["countdownTimer"] = getCountdownTimer();
+    doc["durationTimer"] = getDurationTimer();
+    doc["stillnessTimer"] = getStillnessTimer();
+
+    char output[1024] = ""; // arbitrary size
+    serializeJson(doc, output, sizeof(output)); 
+
+    Serial.printf("Json Uplink: %s\r\n", output);
+    uplink_routine(output);
 }

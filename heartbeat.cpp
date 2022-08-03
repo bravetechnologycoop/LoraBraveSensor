@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include "heartbeat.h"
 #include "OTAA.h"
 #include "systemTimers.h"
@@ -11,13 +12,15 @@ void setupHeartbeat()
     getHeartbeatInterval();
     api.system.timer.create((RAK_TIMER_ID)HEARTBEAT_TIMER, (RAK_TIMER_HANDLER)heartbeatHandler, RAK_TIMER_PERIODIC);
     api.system.timer.start((RAK_TIMER_ID)HEARTBEAT_TIMER, HEARTBEAT_INTERVAL, (void *)1);
-    Serial.printf("Heartbeat interval: %u", HEARTBEAT_INTERVAL);
+    Serial.printf("Heartbeat interval: %u\r\n", HEARTBEAT_INTERVAL);
 }
 
 void heartbeatHandler(void)
 {
+    DynamicJsonDocument doc(1024); 
+    doc["alertType"] = "Heartbeat"; 
     Serial.println("Heartbeat");
-    uplink_routine("Heartbeat");
+    uplink_routine(doc);
 }
 
 bool setHeartbeatInterval(unsigned int interval)
