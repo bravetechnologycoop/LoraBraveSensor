@@ -22,7 +22,7 @@ bool updateHeartbeatInterval();
 /**
  * @returns the heartbeat interval in ms
  */
-unsigned int getHeartbeatInterval()
+unsigned int getHeartbeatInterval(); 
 
 /**
  * sends heartbeat message

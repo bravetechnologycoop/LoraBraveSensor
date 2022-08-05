@@ -128,9 +128,20 @@ void setupOTAA()
   /** Wait for Join success */
   while (api.lorawan.njs.get() == 0)
   {
-    Serial.print("Wait for LoRaWAN join...");
+    Serial.print("Wait for LoRaWAN join 1...");
     api.lorawan.join();
     delay(10000);
+    if (api.lorawan.njs.get() != 0) break; 
+    Serial.print("Wait for LoRaWAN join 2...");
+    api.lorawan.join();
+    delay(10000);
+    if (api.lorawan.njs.get() != 0) break; 
+    Serial.print("Wait for LoRaWAN join 3...");
+    api.lorawan.join();
+    delay(10000);
+    if (api.lorawan.njs.get() != 0) break; 
+    Serial.println("Connection failed! Sleeping...");
+    while (true) api.system.sleep.all(); 
   }
 
   if (!api.lorawan.adr.set(true))
@@ -166,15 +177,14 @@ void uplink_routine(char *payload)
   Serial.println("Starting uplink routine");
   /** Send the data package */
   sending = true;
-  if (api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 2, true, 3))
+  Serial.println("Sending request attempt 1");
+  if (!api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 2, true, 2))
   {
-    Serial.println("Sending is requested");
-  }
-  else
-  {
-    Serial.println("Sending request failed");
-    delay(3000); // Wait for 3 seconds before retrying
-    api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 2, true, 3);
+    for (int i = 2; i < 4 && !api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 2, true, 2); i++)
+    {
+      delay(3000);
+      Serial.printf("Sending request attempt %i\r\n", i);
+    }
   }
   while (sending)
   {
