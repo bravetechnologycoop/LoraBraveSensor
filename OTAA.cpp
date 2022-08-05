@@ -164,32 +164,17 @@ void setupOTAA()
 void uplink_routine(char *payload)
 {
   Serial.println("Starting uplink routine");
-  /** Payload of Uplink */
-  uint8_t data_len = 0;
-  /** Packet buffer for sending */
-  uint8_t collected_data[strlen(payload)] = {0};
-  for (int i = 0; i < strlen(payload); i++)
-  {
-    collected_data[data_len++] = (uint8_t)payload[i];
-  }
-
-  Serial.println("Data Packet:");
-  for (int i = 0; i < data_len; i++)
-  {
-    Serial.printf("0x%02X ", collected_data[i]);
-  }
-  Serial.println("");
-
   /** Send the data package */
   sending = true;
-  if (api.lorawan.send(data_len, (uint8_t *)&collected_data, 2, true, 3))
+  if (api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 2, true, 3))
   {
     Serial.println("Sending is requested");
   }
   else
   {
     Serial.println("Sending request failed");
-    api.lorawan.send(data_len, (uint8_t *)&collected_data, 2, true, 3); 
+    delay(3000); // Wait for 3 seconds before retrying
+    api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 2, true, 3);
   }
   while (sending)
   {
@@ -211,6 +196,7 @@ void uplink_routine(DynamicJsonDocument doc) {
     doc["countdownTimer"] = getCountdownTimer();
     doc["durationTimer"] = getDurationTimer();
     doc["stillnessTimer"] = getStillnessTimer();
+    doc["heartbeatInterval"] = getHeartbeatInterval();
 
     char output[1024] = ""; // arbitrary size
     serializeJson(doc, output, sizeof(output)); 

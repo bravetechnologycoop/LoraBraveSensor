@@ -17,7 +17,12 @@ bool setHeartbeatInterval(unsigned int interval);
  * get the heartbeat interval from the flash address
  * @returns true if successful, false otherwise
  */
-bool getHeartbeatInterval();
+bool updateHeartbeatInterval();
+
+/**
+ * @returns the heartbeat interval in ms
+ */
+unsigned int getHeartbeatInterval()
 
 /**
  * sends heartbeat message

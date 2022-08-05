@@ -9,7 +9,7 @@ static unsigned int HEARTBEAT_INTERVAL = 0;
 
 void setupHeartbeat()
 {
-    getHeartbeatInterval();
+    updateHeartbeatInterval();
     api.system.timer.create((RAK_TIMER_ID)HEARTBEAT_TIMER, (RAK_TIMER_HANDLER)heartbeatHandler, RAK_TIMER_PERIODIC);
     api.system.timer.start((RAK_TIMER_ID)HEARTBEAT_TIMER, HEARTBEAT_INTERVAL, (void *)1);
     Serial.printf("Heartbeat interval: %u\r\n", HEARTBEAT_INTERVAL);
@@ -30,7 +30,12 @@ bool setHeartbeatInterval(unsigned int interval)
     return success;
 }
 
-bool getHeartbeatInterval()
+bool updateHeartbeatInterval()
 {
     return api.system.flash.get(HEARTBEAT_INTERVAL_FLASH_ADDRESS, (uint8_t *)&HEARTBEAT_INTERVAL, sizeof(HEARTBEAT_INTERVAL));
+}
+
+unsigned int getHeartbeatInterval()
+{
+    return HEARTBEAT_INTERVAL;
 }
