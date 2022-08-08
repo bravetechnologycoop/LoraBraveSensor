@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 #include "fsm.h"
 #include "sensors.h"
-#include "OTAA.h"
+#include "lora.h"
 #include "flashAddresses.h"
 
 stateHandler_t stateHandler = state0_idle;

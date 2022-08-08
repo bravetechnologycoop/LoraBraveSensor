@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "OTAA.h"
+#include "lora.h"
 #include "sensors.h"
 #include "fsm.h"
 #include "flashAddresses.h"

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "heartbeat.h"
-#include "OTAA.h"
+#include "lora.h"
 #include "systemTimers.h"
 #include "flashAddresses.h"
 
