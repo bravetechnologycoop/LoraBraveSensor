@@ -34,7 +34,7 @@ void recvCallback(SERVICE_LORA_RECEIVE_T *data)
     if (doc.containsKey("durationTimer"))
     {
       Serial.printf("durationTimer set as %i\r\n", doc["durationTimer"].as<unsigned int>() * 1000);
-      setDurationTimer(doc["durationTimer"].as<unsigned int>());
+      setDurationTimer(doc["durationTimer"].as<unsigned int>() * 1000);
     }
     if (doc.containsKey("stillnessTimer"))
     {
@@ -191,13 +191,13 @@ void uplink_routine(char *payload)
     Serial.println("Waiting for sending...");
     delay(1500); // block until sending complete, to prevent sleeping during send, ceiling for usual send time
   }
-  delay(1500); // for downlinks to be received
-  while (receiving)
-  {
-    Serial.println("Waiting for receiving...");
-    delay(1500); // block until receiving complete, to prevent sleeping during receive, ceiling for usual receive time
-  }
-  delay(1500); // for acknowledgement to be sent
+  // delay(3000); // for downlinks to be received
+  // while (receiving)
+  // {
+  //   Serial.println("Waiting for receiving...");
+  //   delay(1500); // block until receiving complete, to prevent sleeping during receive, ceiling for usual receive time
+  // }
+  // delay(1500); // for acknowledgement to be sent
   Serial.println("End of uplink routine");
 }
 
