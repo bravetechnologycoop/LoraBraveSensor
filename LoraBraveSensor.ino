@@ -1,29 +1,35 @@
 #include <Arduino.h>
 #include "OTAA.h"
-#include "door.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "fsm.h"
 #include "flashAddresses.h"
 #include "heartbeat.h"
 #include "systemTimers.h"
+#include "main.h"
+
+#define DOOR_SENSOR_PIN PA7
+#define MOTION_SENSOR_PIN PA6
+#define BATTERY_PIN PA5
+
+DoorSensor doorSensor = DoorSensor(DOOR_SENSOR_PIN);
+MotionSensor motionSensor = MotionSensor(MOTION_SENSOR_PIN);
+AnalogSensor battery = AnalogSensor(BATTERY_PIN);
 
 void setup()
 {
   setupOTAA();
   setupFSM();
-  setupDoor();
-  setupSensor();
   setupHeartbeat();
   attachInterrupt(
-      digitalPinToInterrupt(DOOR_PIN), [] {}, CHANGE);
+      digitalPinToInterrupt(DOOR_SENSOR_PIN), [] {}, CHANGE);
   attachInterrupt(
-      digitalPinToInterrupt(SENSOR_PIN), [] {}, CHANGE);
-  uplink_routine("Connected");
+      digitalPinToInterrupt(MOTION_SENSOR_PIN), [] {}, CHANGE);
+  uplink_routine("Online");
 }
 
 void loop()
 {
-  int sleepTimer = stateHandler();
+  int sleepTimer = stateHandler(doorSensor, motionSensor);
   Serial.print("Sleeping for ");
   Serial.println(sleepTimer);
   if (sleepTimer > 0)

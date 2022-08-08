@@ -1,6 +1,8 @@
 #ifndef FSM_H
 #define FSM_H
 
+#include "sensors.h"
+
 /**
  * setup the FSM using values from EEPROM
  */
@@ -45,15 +47,15 @@ bool getFlash();
  * states in the FSM
  * @return the sleep time in milliseconds
  */
-int state0_idle();
-int state1_15sCountdown();
-int state2_duration();
-int state3_stillness();
+int state0_idle(DoorSensor doorSensor, MotionSensor motionSensor);
+int state1_15sCountdown(DoorSensor doorSensor, MotionSensor motionSensor);
+int state2_duration(DoorSensor doorSensor, MotionSensor motionSensor);
+int state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor);
 
 /**
  * the current state of the FSM
  */
-typedef int (*stateHandler_t)();
+typedef int (*stateHandler_t)(DoorSensor doorSensor, MotionSensor motionSensor);
 extern stateHandler_t stateHandler;
 
 #endif // FSM_H

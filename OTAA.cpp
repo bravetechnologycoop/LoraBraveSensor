@@ -3,7 +3,7 @@
 #include "fsm.h"
 #include "heartbeat.h"
 #include "secrets.h"
-#include "battery.h"
+#include "main.h"
 
 #define OTAA_PERIOD (20000)
 
@@ -202,7 +202,7 @@ void uplink_routine(char *payload)
 }
 
 void uplink_routine(DynamicJsonDocument doc) {
-    doc["battery"] = getBatteryLevel();
+    doc["battery"] = battery.getValue();
     doc["countdownTimer"] = getCountdownTimer();
     doc["durationTimer"] = getDurationTimer();
     doc["stillnessTimer"] = getStillnessTimer();

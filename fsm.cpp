@@ -1,8 +1,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "fsm.h"
-#include "door.h"
-#include "sensor.h"
+#include "sensors.h"
 #include "OTAA.h"
 #include "flashAddresses.h"
 
@@ -67,12 +66,12 @@ unsigned int getStillnessTimer()
     return STILLNESS_TIMER;
 }
 
-int state0_idle()
+int state0_idle(DoorSensor doorSensor, MotionSensor motionSensor)
 {
     state0_idle_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();
 
-    if (isThereMotion() && !isDoorOpen())
+    if (motionSensor.isThereMotion() && !doorSensor.isDoorOpen())
     {
         stateHandler = state1_15sCountdown;
         Serial.println("state 0 -> state 1: motion detected");
@@ -83,12 +82,12 @@ int state0_idle()
     return 0;
 }
 
-int state1_15sCountdown()
+int state1_15sCountdown(DoorSensor doorSensor, MotionSensor motionSensor)
 {
     state1_15sCountdown_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();
 
-    if (!isThereMotion() || isDoorOpen())
+    if (!motionSensor.isThereMotion() || doorSensor.isDoorOpen())
     {
         stateHandler = state0_idle;
         Serial.println("state 1 -> state 0: no motion, door closed");
@@ -105,12 +104,12 @@ int state1_15sCountdown()
     return state1_15sCountdown_timer;
 }
 
-int state2_duration()
+int state2_duration(DoorSensor doorSensor, MotionSensor motionSensor)
 {
     state2_duration_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();
 
-    if (!isThereMotion())
+    if (!motionSensor.isThereMotion())
     {
         stateHandler = state3_stillness;
         Serial.println("state 2 -> state 3: no motion");
@@ -128,7 +127,7 @@ int state2_duration()
         Serial.println("state 2 -> state 0: duration alert");
         return 1;
     }
-    else if (isDoorOpen())
+    else if (doorSensor.isDoorOpen())
     {
         stateHandler = state0_idle;
         Serial.println("state 2 -> state 0: door opened, session over");
@@ -137,13 +136,13 @@ int state2_duration()
     return state2_duration_timer;
 }
 
-int state3_stillness()
+int state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
 {
     state2_duration_timer -= millis() - lastStateHandleTime;
     state3_stillness_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();
 
-    if (isThereMotion())
+    if (motionSensor.isThereMotion())
     {
         stateHandler = state2_duration;
         Serial.println("state 3 -> state 2: motion detected");
@@ -169,7 +168,7 @@ int state3_stillness()
         Serial.println("state 3 -> state 0: duration alert");
         return 1;
     }
-    else if (isDoorOpen())
+    else if (doorSensor.isDoorOpen())
     {
         stateHandler = state0_idle;
         Serial.println("state 3 -> state 0: door opened, session over");
