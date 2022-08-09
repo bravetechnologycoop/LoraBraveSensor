@@ -2,31 +2,15 @@
 #define HEARTBEAT_H
 
 /**
- * setup timer for heartbeat interval
+ * Gets the remaining heartbeat sleep duration.
+ * @return The remaining heartbeat sleep duration in ms
  */
-void setupHeartbeat();
+unsigned int getHeartbeatRemainingDuration(); 
 
 /**
- * set the heartbeat interval in the flash address
- * @param interval the new heartbeat interval in ms
- * @returns true if successful, false otherwise
- */
-bool setHeartbeatInterval(unsigned int interval);
-
-/**
- * get the heartbeat interval from the flash address
- * @returns true if successful, false otherwise
- */
-bool updateHeartbeatInterval();
-
-/**
- * @returns the heartbeat interval in ms
+ * Gets the heartbeat interval.
+ * @return The heartbeat interval in ms
  */
 unsigned int getHeartbeatInterval(); 
-
-/**
- * sends heartbeat message
- */
-void heartbeatHandler(void);
 
 #endif // HEARTBEAT_H

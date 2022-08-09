@@ -19,23 +19,30 @@ void setup()
 {
   setupOTAA();
   setupFSM();
-  setupHeartbeat();
   attachInterrupt(
       digitalPinToInterrupt(DOOR_SENSOR_PIN), [] {}, CHANGE);
   attachInterrupt(
       digitalPinToInterrupt(MOTION_SENSOR_PIN), [] {}, CHANGE);
-  uplink_routine("Online");
 }
 
 void loop()
 {
-  int sleepTimer = stateHandler(doorSensor, motionSensor);
+  int stateSleepTimer = stateHandler(doorSensor, motionSensor);
+  int heartBeatTimer = getHeartbeatRemainingDuration();
+  int sleepDuration; 
+  if (stateSleepTimer == 0) {
+    sleepDuration = heartBeatTimer;
+  } else if (heartBeatTimer == 0) {
+    sleepDuration = stateSleepTimer;
+  } else {
+    sleepDuration = min(stateSleepTimer, heartBeatTimer);
+  }
   Serial.print("Sleeping for ");
-  Serial.println(sleepTimer);
-  if (sleepTimer > 0)
+  Serial.println(sleepDuration);
+  if (sleepDuration > 0)
   {
     api.system.timer.create((RAK_TIMER_ID)FSM_TIMER, (RAK_TIMER_HANDLER)[](void *){}, RAK_TIMER_ONESHOT);
-    api.system.timer.start((RAK_TIMER_ID)FSM_TIMER, sleepTimer, (void *)1);
+    api.system.timer.start((RAK_TIMER_ID)FSM_TIMER, sleepDuration, (void *)1);
   }
   api.system.sleep.all();
   Serial.println("Woke up");

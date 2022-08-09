@@ -5,34 +5,25 @@
 #include "systemTimers.h"
 #include "flashAddresses.h"
 
-static unsigned int HEARTBEAT_INTERVAL = 0;
+static int HEARTBEAT_INTERVAL = 60000;
+static int heartbeatTimer = HEARTBEAT_INTERVAL;
+static int lastHeartbeatHandleTime = 0;
 
-void setupHeartbeat()
+unsigned int getHeartbeatRemainingDuration()
 {
-    updateHeartbeatInterval();
-    api.system.timer.create((RAK_TIMER_ID)HEARTBEAT_TIMER, (RAK_TIMER_HANDLER)heartbeatHandler, RAK_TIMER_PERIODIC);
-    api.system.timer.start((RAK_TIMER_ID)HEARTBEAT_TIMER, HEARTBEAT_INTERVAL, (void *)1);
-    Serial.printf("Heartbeat interval: %u\r\n", HEARTBEAT_INTERVAL);
-}
+    heartbeatTimer -= millis() - lastHeartbeatHandleTime;
+    lastHeartbeatHandleTime = millis();
+    Serial.printf("Heartbeat remaining duration: %i\r\n", heartbeatTimer);
 
-void heartbeatHandler(void)
-{
-    DynamicJsonDocument doc(1024); 
-    doc["alertType"] = "Heartbeat"; 
-    Serial.println("Heartbeat");
-    uplink_routine(doc);
-}
-
-bool setHeartbeatInterval(unsigned int interval)
-{
-    bool success = api.system.flash.set(HEARTBEAT_INTERVAL_FLASH_ADDRESS, (uint8_t *)&interval, sizeof(HEARTBEAT_INTERVAL));
-    setupHeartbeat();
-    return success;
-}
-
-bool updateHeartbeatInterval()
-{
-    return api.system.flash.get(HEARTBEAT_INTERVAL_FLASH_ADDRESS, (uint8_t *)&HEARTBEAT_INTERVAL, sizeof(HEARTBEAT_INTERVAL));
+    if (heartbeatTimer <= 0)
+    {
+        heartbeatTimer = HEARTBEAT_INTERVAL;
+        DynamicJsonDocument doc(1024);
+        doc["alertType"] = "heartbeat";
+        uplink_routine(doc);
+        Serial.println("heartbeat");
+    }
+    return heartbeatTimer;
 }
 
 unsigned int getHeartbeatInterval()

@@ -41,11 +41,6 @@ void recvCallback(SERVICE_LORA_RECEIVE_T *data)
       Serial.printf("stillnessTimer set as %i\r\n", doc["stillnessTimer"].as<unsigned int>() * 1000);
       setStillnessTimer(doc["stillnessTimer"].as<unsigned int>() * 1000);
     }
-    if (doc.containsKey("heartbeatInterval"))
-    {
-      Serial.printf("heartbeatInterval set as %i\r\n", doc["heartbeatInterval"].as<unsigned int>() * 1000);
-      setHeartbeatInterval(doc["heartbeatInterval"].as<unsigned int>() * 1000);
-    }
   }
   receiving = false;
 }
@@ -191,22 +186,22 @@ void uplink_routine(char *payload)
     Serial.println("Waiting for sending...");
     delay(1500); // block until sending complete, to prevent sleeping during send, ceiling for usual send time
   }
-  // delay(3000); // for downlinks to be received
-  // while (receiving)
-  // {
-  //   Serial.println("Waiting for receiving...");
-  //   delay(1500); // block until receiving complete, to prevent sleeping during receive, ceiling for usual receive time
-  // }
-  // delay(1500); // for acknowledgement to be sent
+  delay(3000); // for downlinks to be received
+  while (receiving)
+  {
+    Serial.println("Waiting for receiving...");
+    delay(1500); // block until receiving complete, to prevent sleeping during receive, ceiling for usual receive time
+  }
+  delay(1500); // for acknowledgement to be sent
   Serial.println("End of uplink routine");
 }
 
 void uplink_routine(DynamicJsonDocument doc) {
     doc["battery"] = battery.getValue();
-    doc["countdownTimer"] = getCountdownTimer();
-    doc["durationTimer"] = getDurationTimer();
-    doc["stillnessTimer"] = getStillnessTimer();
-    doc["heartbeatInterval"] = getHeartbeatInterval();
+    doc["countdownTimer"] = getCountdownTimer() / 1000;
+    doc["durationTimer"] = getDurationTimer() / 1000;
+    doc["stillnessTimer"] = getStillnessTimer() / 1000;
+    doc["heartbeatInterval"] = getHeartbeatInterval() / 1000;
 
     char output[1024] = ""; // arbitrary size
     serializeJson(doc, output, sizeof(output)); 

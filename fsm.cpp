@@ -8,9 +8,9 @@
 stateHandler_t stateHandler = state0_idle;
 unsigned int lastStateHandleTime = millis();
 
-static unsigned int COUNTDOWN_TIMER = 0;
-static unsigned int DURATION_TIMER = 0;
-static unsigned int STILLNESS_TIMER = 0;
+static unsigned int COUNTDOWN_TIMER = 15000;
+static unsigned int DURATION_TIMER = 30000;
+static unsigned int STILLNESS_TIMER = 15000;
 
 int state0_idle_timer = 0;
 int state1_15sCountdown_timer = 0;
