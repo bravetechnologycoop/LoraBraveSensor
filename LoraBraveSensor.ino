@@ -17,7 +17,7 @@ AnalogSensor battery = AnalogSensor(BATTERY_PIN);
 
 void setup()
 {
-  setupOTAA();
+  lora::setupOTAA();
   setupFSM();
   attachInterrupt(
       digitalPinToInterrupt(DOOR_SENSOR_PIN), [] {}, CHANGE);

@@ -4,6 +4,7 @@
 #include "heartbeat.h"
 #include "secrets.h"
 #include "main.h"
+#include "lora.h"
 
 #define OTAA_PERIOD (20000)
 
@@ -63,7 +64,7 @@ void sendCallback(int32_t status)
   sending = false;
 }
 
-void setupOTAA()
+void lora::setupOTAA()
 {
   Serial.begin(115200, RAK_AT_MODE);
 
@@ -167,7 +168,7 @@ void setupOTAA()
   api.lorawan.registerSendCallback(sendCallback);
 }
 
-void uplink_routine(char *payload)
+void lora::sendUplink(char *payload)
 {
   Serial.println("Starting uplink routine");
   /** Send the data package */
@@ -196,7 +197,7 @@ void uplink_routine(char *payload)
   Serial.println("End of uplink routine");
 }
 
-void uplink_routine(DynamicJsonDocument doc) {
+void lora::sendUplink(DynamicJsonDocument doc) {
     doc["battery"] = battery.getValue();
     doc["countdownTimer"] = getCountdownTimer() / 1000;
     doc["durationTimer"] = getDurationTimer() / 1000;
@@ -207,5 +208,5 @@ void uplink_routine(DynamicJsonDocument doc) {
     serializeJson(doc, output, sizeof(output)); 
 
     Serial.printf("Json Uplink: %s\r\n", output);
-    uplink_routine(output);
+    sendUplink(output);
 }

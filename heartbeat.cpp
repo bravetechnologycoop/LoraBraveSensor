@@ -5,7 +5,7 @@
 #include "systemTimers.h"
 #include "flashAddresses.h"
 
-static int HEARTBEAT_INTERVAL = 60000;
+static int HEARTBEAT_INTERVAL = 300000;
 static int heartbeatTimer = HEARTBEAT_INTERVAL;
 static int lastHeartbeatHandleTime = 0;
 
@@ -20,7 +20,7 @@ unsigned int getHeartbeatRemainingDuration()
         heartbeatTimer = HEARTBEAT_INTERVAL;
         DynamicJsonDocument doc(1024);
         doc["alertType"] = "heartbeat";
-        uplink_routine(doc);
+        lora::sendUplink(doc);
         Serial.println("heartbeat");
     }
     return heartbeatTimer;

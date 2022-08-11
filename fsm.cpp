@@ -123,7 +123,7 @@ int state2_duration(DoorSensor doorSensor, MotionSensor motionSensor)
         Serial.println("Duration Alert!!");
         DynamicJsonDocument doc(1024); 
         doc["alertType"] = "DurationAlert"; 
-        uplink_routine(doc);
+        lora::sendUplink(doc);
         Serial.println("state 2 -> state 0: duration alert");
         return 1;
     }
@@ -154,7 +154,7 @@ int state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
         Serial.println("Stillness Alert!!");
         DynamicJsonDocument doc(1024); 
         doc["alertType"] = "StillnessAlert"; 
-        uplink_routine(doc);
+        lora::sendUplink(doc);
         Serial.println("state 3 -> state 0: stillness alert");
         return 1;
     }
@@ -164,7 +164,7 @@ int state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
         Serial.println("Duration Alert!!");
         DynamicJsonDocument doc(1024); 
         doc["alertType"] = "DurationAlert"; 
-        uplink_routine(doc);
+        lora::sendUplink(doc);
         Serial.println("state 3 -> state 0: duration alert");
         return 1;
     }
