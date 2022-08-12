@@ -14,7 +14,6 @@ namespace heartbeat
      * @return The heartbeat interval in ms
      */
     unsigned int getInterval();
-
 }
 
 #endif // HEARTBEAT_H

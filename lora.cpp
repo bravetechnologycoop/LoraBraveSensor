@@ -107,7 +107,7 @@ void lora::setupOTAA()
   uint16_t maskBuff = 0x0002;
   if (!api.lorawan.mask.set(&maskBuff))
   {
-    DEBUG_SERIAL_LOG.printf("LoRaWan OTTA - set mask is incorrect! \r\n");
+    DEBUG_SERIAL_LOG.printf("LoRaWan OTAA - set mask is incorrect! \r\n");
     return;
   }
   if (!api.lorawan.njm.set(RAK_LORA_OTAA)) // Set the network join mode to OTAA
