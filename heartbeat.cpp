@@ -4,29 +4,30 @@
 #include "lora.h"
 #include "systemTimers.h"
 #include "flashAddresses.h"
+#include "main.h"
 
 static int HEARTBEAT_INTERVAL = 300000;
-static int heartbeatTimer = HEARTBEAT_INTERVAL;
+static int heartbeatTimer = 0; 
 static int lastHeartbeatHandleTime = 0;
 
-unsigned int getHeartbeatRemainingDuration()
+unsigned int heartbeat::getRemainingDuration()
 {
     heartbeatTimer -= millis() - lastHeartbeatHandleTime;
     lastHeartbeatHandleTime = millis();
-    Serial.printf("Heartbeat remaining duration: %i\r\n", heartbeatTimer);
+    DEBUG_SERIAL_LOG_MORE.printf("Heartbeat remaining duration: %i\r\n", heartbeatTimer);
 
     if (heartbeatTimer <= 0)
     {
         heartbeatTimer = HEARTBEAT_INTERVAL;
         DynamicJsonDocument doc(1024);
-        doc["alertType"] = "heartbeat";
+        doc["alertType"] = "Heartbeat";
         lora::sendUplink(doc);
-        Serial.println("heartbeat");
+        DEBUG_SERIAL_LOG.println("Heartbeat");
     }
     return heartbeatTimer;
 }
 
-unsigned int getHeartbeatInterval()
+unsigned int heartbeat::getInterval()
 {
     return HEARTBEAT_INTERVAL;
 }

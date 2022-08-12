@@ -18,17 +18,18 @@ AnalogSensor battery = AnalogSensor(BATTERY_PIN);
 void setup()
 {
   lora::setupOTAA();
-  setupFSM();
+  fsm::setupFSM();
   attachInterrupt(
       digitalPinToInterrupt(DOOR_SENSOR_PIN), [] {}, CHANGE);
   attachInterrupt(
       digitalPinToInterrupt(MOTION_SENSOR_PIN), [] {}, CHANGE);
+  lora::sendUplink("Connected :3"); // No idea why first message always fails to send
 }
 
 void loop()
 {
-  int stateSleepTimer = stateHandler(doorSensor, motionSensor);
-  int heartBeatTimer = getHeartbeatRemainingDuration();
+  int stateSleepTimer = fsm::stateHandler(doorSensor, motionSensor);
+  int heartBeatTimer = heartbeat::getRemainingDuration();
   int sleepDuration; 
   if (stateSleepTimer == 0) {
     sleepDuration = heartBeatTimer;
@@ -37,13 +38,13 @@ void loop()
   } else {
     sleepDuration = min(stateSleepTimer, heartBeatTimer);
   }
-  Serial.print("Sleeping for ");
-  Serial.println(sleepDuration);
+  DEBUG_SERIAL_LOG.print("Sleeping for ");
+  DEBUG_SERIAL_LOG.println(sleepDuration);
   if (sleepDuration > 0)
   {
     api.system.timer.create((RAK_TIMER_ID)FSM_TIMER, (RAK_TIMER_HANDLER)[](void *){}, RAK_TIMER_ONESHOT);
     api.system.timer.start((RAK_TIMER_ID)FSM_TIMER, sleepDuration, (void *)1);
   }
   api.system.sleep.all();
-  Serial.println("Woke up");
+  DEBUG_SERIAL_LOG_MORE.println("Woke up");
 }

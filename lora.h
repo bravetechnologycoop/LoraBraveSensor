@@ -5,7 +5,6 @@
 
 namespace lora
 {
-    public: 
     /**
      * setup the OTAA protocol and establish a connection with the gateway
      */
@@ -23,20 +22,19 @@ namespace lora
      */
     void sendUplink(DynamicJsonDocument payload);
 
-    private: 
     /**
      * the callback function for the LoRa module to call when a message is received
      */
-    void recvCallback(SERVICE_LORA_RECEIVE_T *data);
+    static void recvCallback(SERVICE_LORA_RECEIVE_T *data);
 
     /**
      * the callback function for the LoRa module to call when a join request is received
      */
-    void joinCallback(int32_t status);
+    static void joinCallback(int32_t status);
 
     /**
      * the callback function for the LoRa module to call when a message is sent
      */
-    void sendCallback(int32_t status);    
+    static void sendCallback(int32_t status);
 }
 #endif // OTAA_H

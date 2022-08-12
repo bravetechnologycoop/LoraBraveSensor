@@ -91,4 +91,6 @@ private:
     int getValue();
 }; 
 
+extern AnalogSensor battery; 
+
 #endif // SENSORS_H
