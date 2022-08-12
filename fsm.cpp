@@ -92,7 +92,7 @@ int fsm::state1_15sCountdown(DoorSensor doorSensor, MotionSensor motionSensor)
     {
         fsm::stateHandler = fsm::state0_idle;
         DEBUG_SERIAL_LOG.println("state 1 -> state 0: no motion, door closed");
-        return 1;
+        return 1; // In case after returning to state0, conditions are met to go to state1
     }
     else if (state1_15sCountdown_timer <= 0)
     {
@@ -116,7 +116,7 @@ int fsm::state2_duration(DoorSensor doorSensor, MotionSensor motionSensor)
         DEBUG_SERIAL_LOG.println("state 2 -> state 3: no motion");
 
         state3_stillness_timer = STILLNESS_TIMER;
-        return state3_stillness_timer;
+        return min(state3_stillness_timer, state2_duration_timer); // For duration alert happening in state3_stillness
     }
     else if (state2_duration_timer <= 0)
     {
@@ -126,13 +126,13 @@ int fsm::state2_duration(DoorSensor doorSensor, MotionSensor motionSensor)
         doc["alertType"] = "DurationAlert"; 
         lora::sendUplink(doc);
         DEBUG_SERIAL_LOG.println("state 2 -> state 0: duration alert");
-        return 1;
+        return 1; // In case after returning to state0, conditions are met to go to state1
     }
     else if (doorSensor.isDoorOpen())
     {
         fsm::stateHandler = fsm::state0_idle;
         DEBUG_SERIAL_LOG.println("state 2 -> state 0: door opened, session over");
-        return 1;
+        return 1; // In case after returning to state0, conditions are met to go to state1
     }
     return state2_duration_timer;
 }
@@ -157,7 +157,7 @@ int fsm::state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
         doc["alertType"] = "StillnessAlert"; 
         lora::sendUplink(doc);
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: stillness alert");
-        return 1;
+        return 1; // In case after returning to state0, conditions are met to go to state1
     }
     else if (state2_duration_timer <= 0)
     {
@@ -167,13 +167,13 @@ int fsm::state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
         doc["alertType"] = "DurationAlert"; 
         lora::sendUplink(doc);
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: duration alert");
-        return 1;
+        return 1; // In case after returning to state0, conditions are met to go to state1
     }
     else if (doorSensor.isDoorOpen())
     {
         fsm::stateHandler = fsm::state0_idle;
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: door opened, session over");
-        return 1;
+        return 1; // In case after returning to state0, conditions are met to go to state1
     }
-    return state3_stillness_timer;
+    return min(state3_stillness_timer, state2_duration_timer); // For duration alert happening in state3_stillness
 }

@@ -3,6 +3,10 @@
 
 #include "sensors.h"
 
+const int MAX_HEARTBEAT_TIMER = 20000; 
+const int MIN_DURATION_TIMER = 30000; 
+const int MIN_STILLNESS_TIMER = 15000; 
+
 namespace fsm
 {
     /**

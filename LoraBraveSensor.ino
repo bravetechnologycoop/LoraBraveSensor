@@ -23,14 +23,17 @@ void setup()
       digitalPinToInterrupt(DOOR_SENSOR_PIN), [] {}, CHANGE);
   attachInterrupt(
       digitalPinToInterrupt(MOTION_SENSOR_PIN), [] {}, CHANGE);
-  lora::sendUplink("Connected :3"); // No idea why first message always fails to send
+  lora::sendUplink("Modify the comment if this gets sent :3"); // No idea why first message always fails to send
 }
 
 void loop()
 {
   int stateSleepTimer = fsm::stateHandler(doorSensor, motionSensor);
   int heartBeatTimer = heartbeat::getRemainingDuration();
+  DEBUG_SERIAL_LOG_MORE.printf("State sleep timer: %is\r\n", stateSleepTimer / 1000);
+  DEBUG_SERIAL_LOG_MORE.printf("Heartbeat timer: %is\r\n", heartBeatTimer / 1000);
   int sleepDuration; 
+  // Logic nessessary as timer == 0 equates infinite sleep, which is greater than any positive timer value
   if (stateSleepTimer == 0) {
     sleepDuration = heartBeatTimer;
   } else if (heartBeatTimer == 0) {
@@ -38,8 +41,7 @@ void loop()
   } else {
     sleepDuration = min(stateSleepTimer, heartBeatTimer);
   }
-  DEBUG_SERIAL_LOG.print("Sleeping for ");
-  DEBUG_SERIAL_LOG.println(sleepDuration);
+  DEBUG_SERIAL_LOG.printf("Sleeping for %is\r\n", sleepDuration / 1000);
   if (sleepDuration > 0)
   {
     api.system.timer.create((RAK_TIMER_ID)FSM_TIMER, (RAK_TIMER_HANDLER)[](void *){}, RAK_TIMER_ONESHOT);

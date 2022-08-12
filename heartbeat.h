@@ -3,7 +3,6 @@
 
 namespace heartbeat
 {
-
     /**
      * Gets the remaining heartbeat sleep duration.
      * @return The remaining heartbeat sleep duration in ms

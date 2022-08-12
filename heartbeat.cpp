@@ -14,7 +14,6 @@ unsigned int heartbeat::getRemainingDuration()
 {
     heartbeatTimer -= millis() - lastHeartbeatHandleTime;
     lastHeartbeatHandleTime = millis();
-    DEBUG_SERIAL_LOG_MORE.printf("Heartbeat remaining duration: %i\r\n", heartbeatTimer);
 
     if (heartbeatTimer <= 0)
     {
