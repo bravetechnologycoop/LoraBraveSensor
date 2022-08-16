@@ -7,61 +7,61 @@
 #include "systemTimers.h"
 #include "main.h"
 
-#define DOOR_SENSOR_PIN PA7
-#define MOTION_SENSOR_PIN PA6
 #define BATTERY_PIN PA5
 #define EEPROM_RESET_PIN PA4
 
-DoorSensor doorSensor = DoorSensor(DOOR_SENSOR_PIN);
-MotionSensor motionSensor = MotionSensor(MOTION_SENSOR_PIN);
 AnalogSensor battery = AnalogSensor(BATTERY_PIN);
 
 void setup()
 {
   lora::setupOTAA();
-
-  lora::sendUplink("Modify the comment if this gets sent :3"); // No idea why first message always fails to send
+  for (int i = 0; i < api.lorawan.rety.get() - 1; i++)
+  {
+    lora::sendUplink("Modify the comment if this gets sent :3"); // I beleive this flushes the retry buffer, 
+  }                                                              // must happen before attempting uplinks
 
   pinMode(EEPROM_RESET_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(EEPROM_RESET_PIN), resetEeprom, RISING);
 
   attachInterrupt(
-      digitalPinToInterrupt(DOOR_SENSOR_PIN), [] {}, CHANGE);
-  attachInterrupt(
-      digitalPinToInterrupt(MOTION_SENSOR_PIN), [] {}, CHANGE);
-      
-  fsm::setupFSM();    
-  heartbeat::setupHeartbeat(); 
+      digitalPinToInterrupt(DOOR_SENSOR_PIN), fsm::addToSensorDataQueue, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(MOTION_SENSOR_PIN), fsm::addToSensorDataQueue, CHANGE);
+
+  fsm::setupFSM();
+  heartbeat::setupHeartbeat();
 }
 
 void loop()
 {
-  int stateSleepTimer = fsm::stateHandler(doorSensor, motionSensor);
   int heartBeatTimer = heartbeat::getRemainingDuration();
+  int uplinkTimer = lora::getRemainingDuration();
+  int stateSleepTimer = fsm::handleState();
+  DEBUG_SERIAL_LOG_MORE.printf("Heartbeat timer: %is, ", heartBeatTimer / 1000);
+  DEBUG_SERIAL_LOG_MORE.printf("Uplink timer: %is", uplinkTimer / 1000);
   DEBUG_SERIAL_LOG_MORE.printf("State sleep timer: %is\r\n", stateSleepTimer / 1000);
-  DEBUG_SERIAL_LOG_MORE.printf("Heartbeat timer: %is\r\n", heartBeatTimer / 1000);
-  int sleepDuration; 
-  // Logic nessessary as timer == 0 equates infinite sleep, which is greater than any positive timer value
-  if (stateSleepTimer == 0) {
-    sleepDuration = heartBeatTimer;
-  } else if (heartBeatTimer == 0) {
-    sleepDuration = stateSleepTimer;
-  } else {
-    sleepDuration = min(stateSleepTimer, heartBeatTimer);
-  }
-  DEBUG_SERIAL_LOG.printf("Sleeping for %is\r\n", sleepDuration / 1000);
+  int sleepDuration = min(heartBeatTimer, min(uplinkTimer, stateSleepTimer));
+
   if (sleepDuration > 0)
   {
-    api.system.timer.create((RAK_TIMER_ID)FSM_TIMER, (RAK_TIMER_HANDLER)[](void *){}, RAK_TIMER_ONESHOT);
+    api.system.timer.create((RAK_TIMER_ID)FSM_TIMER, (RAK_TIMER_HANDLER)fsm::addToSensorDataQueue, RAK_TIMER_ONESHOT);
     api.system.timer.start((RAK_TIMER_ID)FSM_TIMER, sleepDuration, (void *)1);
   }
-  api.system.sleep.all();
-  DEBUG_SERIAL_LOG_MORE.println("Woke up");
+  if (fsm::isSensorDataQueueEmpty() && !lora::isUplinkInProgress())
+  {
+    DEBUG_SERIAL_LOG.printf("Attempting to sleep for %is...", sleepDuration / 1000);
+    DEBUG_SERIAL_LOG.println("state queue empty, lora complete, sleeping");
+    api.system.sleep.all();
+    DEBUG_SERIAL_LOG.println("Woke up");
+  }
+  else
+  {
+    DEBUG_SERIAL_LOG_MORE.println("State queue not empty or lora not complete");
+  }
 }
 
 void resetEeprom()
 {
-    DEBUG_SERIAL_LOG.printf("Resetting EEPROM\r\n");
-    fsm::resetTimers(); 
-    heartbeat::resetTimers(); 
+  DEBUG_SERIAL_LOG.printf("Resetting EEPROM\r\n");
+  fsm::resetTimers();
+  heartbeat::resetTimers();
 }

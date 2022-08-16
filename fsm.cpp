@@ -1,18 +1,19 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <limits.h>
 #include "fsm.h"
 #include "sensors.h"
 #include "lora.h"
 #include "flashAddresses.h"
 #include "main.h"
-#include "lora.h"
+#include <queue>
 
 fsm::stateHandler_t fsm::stateHandler = fsm::state0Idle;
 unsigned int lastStateHandleTime = millis();
 
-const unsigned int MAX_COUNTDOWN_TIMER = 20000; // 20s
-const unsigned int MAX_DURATION_TIMER = 86400000; // 24h
-const unsigned int MAX_STILLNESS_TIMER = 86400000; // 24h
+const unsigned int MAX_COUNTDOWN_TIMER = 20000;     // 20s
+const unsigned int MAX_DURATION_TIMER = 86400000;   // 24h
+const unsigned int MAX_STILLNESS_TIMER = 86400000;  // 24h
 const unsigned int DEFAULT_COUNTDOWN_TIMER = 15000; // 15s
 const unsigned int DEFAULT_DURATION_TIMER = 30000;  // 30s
 const unsigned int DEFAULT_STILLNESS_TIMER = 15000; // 15s
@@ -26,6 +27,10 @@ int state1_countdown_timer = 0;
 int state2_duration_timer = 0;
 int state3_stillness_timer = 0;
 
+deque<SensorData> sensorDataQueue; // May cause race conditions from lack of threadsafeness, had difficulty using thread-safe queue due to compilation errors from mutex locks
+DoorSensor doorSensor = DoorSensor(DOOR_SENSOR_PIN);
+MotionSensor motionSensor = MotionSensor(MOTION_SENSOR_PIN);
+
 void fsm::setupFSM()
 {
     bool success = api.system.flash.get(COUNTDOWN_TIMER_FLASH_ADDRESS, (uint8_t *)&countdownTimer, sizeof(countdownTimer)) &&
@@ -38,6 +43,21 @@ void fsm::setupFSM()
         lora::sendUplink(msg);
     }
     DEBUG_SERIAL_LOG.printf("Timers constants: countdown: %u, duration: %u, stillness: %u\r\n", countdownTimer, countdownTimer, stillnessTimer);
+}
+
+int fsm::handleState()
+{
+    SensorData sensorData;
+    if (!sensorDataQueue.empty())
+    {
+        sensorData = sensorDataQueue.front();
+        sensorDataQueue.pop_front();
+    }
+    else
+    {
+        sensorData = {.isDoorOpen = doorSensor.isDoorOpen(), .isThereMotion = motionSensor.isThereMotion()};
+    }
+    return stateHandler(sensorData);
 }
 
 int fsm::setCountdownTimer(unsigned int timer)
@@ -103,12 +123,12 @@ unsigned int fsm::getStillnessTimer()
     return stillnessTimer;
 }
 
-int fsm::state0Idle(DoorSensor doorSensor, MotionSensor motionSensor)
+int fsm::state0Idle(SensorData sensorData)
 {
     state0_idle_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();
 
-    if (motionSensor.isThereMotion() && !doorSensor.isDoorOpen())
+    if (sensorData.isThereMotion && !sensorData.isDoorOpen)
     {
         fsm::stateHandler = fsm::state1Countdown;
         DEBUG_SERIAL_LOG.println("state 0 -> state 1: motion detected");
@@ -116,15 +136,15 @@ int fsm::state0Idle(DoorSensor doorSensor, MotionSensor motionSensor)
         state1_countdown_timer = countdownTimer;
         return state1_countdown_timer;
     }
-    return 0;
+    return INT_MAX;
 }
 
-int fsm::state1Countdown(DoorSensor doorSensor, MotionSensor motionSensor)
+int fsm::state1Countdown(SensorData sensorData)
 {
     state1_countdown_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();
 
-    if (!motionSensor.isThereMotion() || doorSensor.isDoorOpen())
+    if (!sensorData.isThereMotion || sensorData.isDoorOpen)
     {
         fsm::stateHandler = fsm::state0Idle;
         DEBUG_SERIAL_LOG.println("state 1 -> state 0: no motion, door closed");
@@ -141,14 +161,14 @@ int fsm::state1Countdown(DoorSensor doorSensor, MotionSensor motionSensor)
     return state1_countdown_timer;
 }
 
-int fsm::state2Duration(DoorSensor doorSensor, MotionSensor motionSensor)
+int fsm::state2Duration(SensorData sensorData)
 {
     state2_duration_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();
 
-    if (!motionSensor.isThereMotion())
+    if (!sensorData.isThereMotion)
     {
-        fsm::stateHandler = fsm::state3_stillness;
+        fsm::stateHandler = fsm::state3Stillness;
         DEBUG_SERIAL_LOG.println("state 2 -> state 3: no motion");
 
         state3_stillness_timer = stillnessTimer;
@@ -163,7 +183,7 @@ int fsm::state2Duration(DoorSensor doorSensor, MotionSensor motionSensor)
         DEBUG_SERIAL_LOG.println("state 2 -> state 0: duration alert");
         return 1; // In case after returning to state0, conditions are met to go to state1
     }
-    else if (doorSensor.isDoorOpen())
+    else if (sensorData.isDoorOpen)
     {
         fsm::stateHandler = fsm::state0Idle;
         DEBUG_SERIAL_LOG.println("state 2 -> state 0: door opened, session over");
@@ -172,13 +192,13 @@ int fsm::state2Duration(DoorSensor doorSensor, MotionSensor motionSensor)
     return state2_duration_timer;
 }
 
-int fsm::state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
+int fsm::state3Stillness(SensorData sensorData)
 {
     state2_duration_timer -= millis() - lastStateHandleTime;
     state3_stillness_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();
 
-    if (motionSensor.isThereMotion())
+    if (sensorData.isThereMotion)
     {
         fsm::stateHandler = fsm::state2Duration;
         DEBUG_SERIAL_LOG.println("state 3 -> state 2: motion detected");
@@ -202,7 +222,7 @@ int fsm::state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: duration alert");
         return 1; // In case after returning to state0, conditions are met to go to state1
     }
-    else if (doorSensor.isDoorOpen())
+    else if (sensorData.isDoorOpen)
     {
         fsm::stateHandler = fsm::state0Idle;
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: door opened, session over");
@@ -216,4 +236,32 @@ void fsm::resetTimers()
     fsm::setCountdownTimer(DEFAULT_COUNTDOWN_TIMER);
     fsm::setDurationTimer(DEFAULT_DURATION_TIMER);
     fsm::setStillnessTimer(DEFAULT_STILLNESS_TIMER);
+}
+
+void fsm::addToSensorDataQueue()
+{
+    DEBUG_SERIAL_LOG.printf("Adding to sensor data queue...");
+    SensorData sensorData = {
+        .isDoorOpen = doorSensor.isDoorOpen(),
+        .isThereMotion = motionSensor.isThereMotion()};
+
+    if (sensorDataQueue.empty())
+    {
+        DEBUG_SERIAL_LOG.println("success");
+        sensorDataQueue.push_back(sensorData);
+    }
+    else if (!sensorDataQueue.empty() && sensorDataQueue.back() != sensorData)
+    { // Avoids consecutive duplicate entires, as they do not affect state machine behaviour
+        sensorDataQueue.push_back(sensorData);
+        DEBUG_SERIAL_LOG.printf("queue size: %u, Done\r\n", sensorDataQueue.size());
+    }
+    else
+    {
+        DEBUG_SERIAL_LOG.println("aborted, a duplicate entry");
+    }
+}
+
+bool fsm::isSensorDataQueueEmpty()
+{
+    return sensorDataQueue.empty();
 }
