@@ -18,9 +18,8 @@ unsigned int heartbeat::getRemainingDuration()
     if (heartbeatTimer <= 0)
     {
         heartbeatTimer = HEARTBEAT_INTERVAL;
-        DynamicJsonDocument doc(1024);
-        doc["alertType"] = "Heartbeat";
-        lora::sendUplink(doc);
+        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::HEARTBEAT}; 
+        lora::sendUplink(msg);
         DEBUG_SERIAL_LOG.println("Heartbeat");
     }
     return heartbeatTimer;

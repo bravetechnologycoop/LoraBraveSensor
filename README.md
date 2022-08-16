@@ -1,10 +1,24 @@
 # Lora Based BraveSensor Firmware
 
+# Project Overview
 
-# Project Setup
-Follow this [guide](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3272S-Breakout-Board/Quickstart/#rak3272s-breakout-board-as-a-stand-alone-device-using-rui3) on how to setup. I recommend using vscode's Arduino extension for easier file management. 
+## Setup
+Follow this [guide](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3272S-Breakout-Board/Quickstart/#rak3272s-breakout-board-as-a-stand-alone-device-using-rui3) on how to setup. The LoraBraveSensor directory can subsitute the Arduino Serial demo, as a guide on how to compile and upload our custom firmware. After going throught the entire process, I recommend using vscode's Arduino extension for easier file management. 
+
+## Secrets File
+DEVEUI: which can be found by scanning the QR code on the LoRaWan chip. 
+APPEUI: currently we use the same APPEUI as the one for BraveButtons
+APPEUI: APPEUI = hex(str(hex(DEVEUI)) + str(hex(APPEUI)))
+An example one can be found in our private [living doc](https://app.clickup.com/2434616/v/dc/2a9hr-2261/2a9hr-8442)
+
+### Using Arduino Extension for VSCode
+I recommend using VSCode's Arduino extension for easier file management, after going through the setup process with the Arduino IDE at least once. After opening the project with VSCode, if you notice red squiggly error messages for missing includes, follow [this](https://stackoverflow.com/questions/52234438/vs-code-giving-header-errors-for-arduino-missing-official-header) guide on how to fix them. On Windows 10, the board firmware files can be found at `C:/Users/{user}/AppData/Local/Arduino15/packages/rak_rui/hardware/stm32/3.4.2/cores/STM32WLE/component/rui_v3_api`, and can be added under `includePath` of the `.vscode/c_cpp_properties.json` file. 
+
+## Serial Debugging
+Can be done with any serial monitor (e.g. Arduino, Arduino's VSCode Extension, PlatformIO, etc.) with BAUD rate of 115200. 
+
 ## Libraries
-- [Arduino](https://docs.arduino.cc/) for general firmware
+- [Arduino](https://www.arduino.cc/reference/en/) for general firmware
 - [RAKwireless unified Interface V3 (RUI3)](https://docs.rakwireless.com/RUI3/) for hardware interfacing
 - [ArduinoJson](https://arduinojson.org/) for LoRaWAN data
 
@@ -28,7 +42,7 @@ The heartbeat system is ran on a timer provided by RAK's RUI3, and will send a m
 ## LoRaWan
 OTAA is used to connect to the LoRaWan gateway, following [this](https://news.rakwireless.com/get-started-with-rui3-api/) guide. Changes have been made, such as using a [sub-band 2](https://forum.rakwireless.com/t/connecting-rak3172s-breakout-board-to-aws-iot-for-lorawan/7366) (8 channels). Upon device start/restart, it will attempt to connect to a gateway thrice, over 30 seconds, and will go to sleep should that fail. LoRa send requests are also done up to three times, at two sends per request. 
 ### Downlinks
-Downlink payload data use a base64 encoded json, e.g. , that is [converted](https://codebeautify.org/json-to-base64-converter), and sent via AWS IoT for LoRaWan -> Devices -> <i>Device ID</i> -> Device Traffic -> Qeuue downlink message -> Payload field (any FPort will do). 
+Downlink payload data use a base64 encoded json, e.g. , that is [converted](https://codebeautify.org/json-to-base64-converter), and sent via AWS IoT for LoRaWan -> Devices -> <i>Device ID</i> -> Device Traffic -> Queue downlink message -> Payload field (any FPort will do). 
 For example: `{
     "countdownTimer": 15, 
     "durationTimer": 60, 
@@ -37,8 +51,8 @@ For example: `{
 }` encoded to `ewogICAgImNvdW50ZG93blRpbWVyIjogMTUsIAogICAgImR1cmF0aW9uVGltZXIiOiA2MCwgCiAgICAic3RpbGxuZXNzVGltZXIiOiAzMCwgCiAgICAiaGVhcnRiZWF0SW50ZXJ2YWwiOiAyNDAKfQ==`
 ### Uplinks
 Uplinks can be viewed at AWS IoT for LoRaWan -> Test -> MQTT test client, and subscribing to `rak3272/pub`, with the payload being a base64 encoded json. 
-For example:  `eyJhbGVydFR5cGUiOiJEdXJhdGlvbkFsZXJ0IiwiYmF0dGVyeSI6ODE5MiwiY291bnRkb3duVGltZXIiOjE1MDAwLCJkdXJhdGlvblRpbWVyIjo2MCwic3RpbGxuZXNzVGltZXIiOjMwMDAwLCJoZWFydGJlYXRJbnRlcnZhbCI6MTIwMDAwfQ==` 
-decodes to `{"alertType":"DurationAlert","battery":8192,"countdownTimer":15000,"durationTimer":60,"stillnessTimer":30000,"heartbeatInterval":120000}`). 
+For example:  `eyJhbGVydFR5cGUiOiJEdXJhdGlvbkFsZXJ0IiwiYmF0dGVyeSI6ODE5MiwiY291bnRkb3duVGltZXIiOjE1LCJkdXJhdGlvblRpbWVyIjozMCwic3RpbGxuZXNzVGltZXIiOjE1LCJoZWFydGJlYXRJbnRlcnZhbCI6MzAwfQ==` 
+decodes to `{"alertType":"DurationAlert","battery":8192,"countdownTimer":15,"durationTimer":30,"stillnessTimer":15,"heartbeatInterval":300}`). 
 
 ## Power Saving Measures
 The system is designed to go to sleep, unless there are changes to the digital input pins, or a timer interrupt. Limitation's of RUI3, results in a specific implementation -- more info can be found [here](https://forum.rakwireless.com/t/rui3-wake-on-interrupt/7460/8). 
