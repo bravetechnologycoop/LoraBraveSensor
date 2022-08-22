@@ -89,7 +89,7 @@ int fsm::state0_idle(DoorSensor doorSensor, MotionSensor motionSensor)
 
     if (motionSensor.isThereMotion() && !doorSensor.isDoorOpen())
     {
-        fsm::stateHandler = fsm::state1_Countdown;
+        fsm::stateHandler = fsm::state1_countdown;
         DEBUG_SERIAL_LOG.println("state 0 -> state 1: motion detected");
 
         state1_countdown_timer = COUNTDOWN_TIMER;
@@ -98,7 +98,7 @@ int fsm::state0_idle(DoorSensor doorSensor, MotionSensor motionSensor)
     return 0;
 }
 
-int fsm::state1_Countdown(DoorSensor doorSensor, MotionSensor motionSensor)
+int fsm::state1_countdown(DoorSensor doorSensor, MotionSensor motionSensor)
 {
     state1_countdown_timer -= millis() - lastStateHandleTime;
     lastStateHandleTime = millis();

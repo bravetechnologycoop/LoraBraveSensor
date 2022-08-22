@@ -8,7 +8,7 @@ const int MIN_DURATION_TIMER = 30000;
 const int MIN_STILLNESS_TIMER = 15000; 
 
 namespace fsm
-{ 
+{
     /**
      * setup the FSM using values from EEPROM
      */
@@ -54,7 +54,7 @@ namespace fsm
      * @return the sleep time in milliseconds
      */
     int state0_idle(DoorSensor doorSensor, MotionSensor motionSensor);
-    int state1_Countdown(DoorSensor doorSensor, MotionSensor motionSensor);
+    int state1_countdown(DoorSensor doorSensor, MotionSensor motionSensor);
     int state2_duration(DoorSensor doorSensor, MotionSensor motionSensor);
     int state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor);
 
