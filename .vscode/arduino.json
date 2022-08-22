@@ -1,5 +1,0 @@
-{
-    "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
-    "port": "COM6",
-    "sketch": "LoraBraveSensor.ino"
-}
