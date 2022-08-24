@@ -3,10 +3,6 @@
 
 #include "sensors.h"
 
-const int MAX_HEARTBEAT_TIMER = 20000; 
-const int MIN_DURATION_TIMER = 30000; 
-const int MIN_STILLNESS_TIMER = 15000; 
-
 namespace fsm
 {
     /**
@@ -44,10 +40,9 @@ namespace fsm
     int setStillnessTimer(unsigned int timer);
 
     /**
-     * updates timer constants with the values stored in flash
-     * @return true if successful, false otherwise
+     * resets the timers to their default values
      */
-    bool updateTimersFromFlash();
+    void resetTimers(); 
 
     /**
      * states in the FSM

@@ -9,9 +9,16 @@
 fsm::stateHandler_t fsm::stateHandler = fsm::state0_idle;
 unsigned int lastStateHandleTime = millis();
 
-static unsigned int COUNTDOWN_TIMER = 15000;
-static unsigned int DURATION_TIMER = 30000;
-static unsigned int STILLNESS_TIMER = 15000;
+const unsigned int MAX_COUNTDOWN_TIMER = 20000; // 20s
+const unsigned int MIN_DURATION_TIMER = 30000; // 30s
+const unsigned int MIN_STILLNESS_TIMER = 30000; // 30s
+const unsigned int DEFAULT_COUNTDOWN_TIMER = 15000; // 15s
+const unsigned int DEFAULT_DURATION_TIMER = 30000; // 30s
+const unsigned int DEFAULT_STILLNESS_TIMER = 15000; // 15s
+
+static unsigned int COUNTDOWN_TIMER = DEFAULT_COUNTDOWN_TIMER;
+static unsigned int DURATION_TIMER = DEFAULT_DURATION_TIMER;
+static unsigned int STILLNESS_TIMER = DEFAULT_STILLNESS_TIMER;
 
 int state0_idle_timer = 0;
 int state1_countdown_timer = 0;
@@ -20,50 +27,61 @@ int state3_stillness_timer = 0;
 
 void fsm::setupFSM()
 {
-    updateTimersFromFlash();
-    DEBUG_SERIAL_LOG.printf("Timers constants: countdown: %u, duration: %u, stillness: %u\r\n", COUNTDOWN_TIMER, DURATION_TIMER, STILLNESS_TIMER);
-}
-
-bool fsm::updateTimersFromFlash()
-{
-    return api.system.flash.get(COUNTDOWN_TIMER_FLASH_ADDRESS, (uint8_t *)&COUNTDOWN_TIMER, sizeof(COUNTDOWN_TIMER)) &&
+    bool success = api.system.flash.get(COUNTDOWN_TIMER_FLASH_ADDRESS, (uint8_t *)&COUNTDOWN_TIMER, sizeof(COUNTDOWN_TIMER)) &&
            api.system.flash.get(DURATION_TIMER_FLASH_ADDRESS, (uint8_t *)&DURATION_TIMER, sizeof(DURATION_TIMER)) &&
-           api.system.flash.get(STILLNESS_TIMER_FLASH_ADDRESS, (uint8_t *)&STILLNESS_TIMER, sizeof(STILLNESS_TIMER)); 
+           api.system.flash.get(STILLNESS_TIMER_FLASH_ADDRESS, (uint8_t *)&STILLNESS_TIMER, sizeof(STILLNESS_TIMER));
+    if (!success) DEBUG_SERIAL_LOG.println("Error reading flash");
+    DEBUG_SERIAL_LOG.printf("Timers constants: countdown: %u, duration: %u, stillness: %u\r\n", COUNTDOWN_TIMER, DURATION_TIMER, STILLNESS_TIMER);
 }
 
 int fsm::setCountdownTimer(unsigned int timer)
 {
-    bool success = api.system.flash.set(COUNTDOWN_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(COUNTDOWN_TIMER));
-    COUNTDOWN_TIMER = timer;
-    if (success)
-    {
-        DEBUG_SERIAL_LOG.printf("Countdown timer set to %u\r\n", COUNTDOWN_TIMER);
-        return COUNTDOWN_TIMER; 
+    if (timer <= MAX_COUNTDOWN_TIMER) {
+        bool success = api.system.flash.set(COUNTDOWN_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(COUNTDOWN_TIMER));
+        if (success)
+        {
+            COUNTDOWN_TIMER = timer;
+            DEBUG_SERIAL_LOG.printf("Countdown timer set to %u\r\n", COUNTDOWN_TIMER);
+            return COUNTDOWN_TIMER;
+        }
     }
+    DEBUG_SERIAL_LOG.printf("Failed to set countdown timer to %u\r\n", timer);
     return -1;
 }
 
 int fsm::setDurationTimer(unsigned int timer)
 {
-    bool success = api.system.flash.set(DURATION_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(DURATION_TIMER));
-    DURATION_TIMER = timer;
-    if (success)
-    {
-        DEBUG_SERIAL_LOG.printf("Duration timer set to %u\r\n", DURATION_TIMER);
-        return DURATION_TIMER;
+    if (timer >= MIN_DURATION_TIMER) {
+        bool success = api.system.flash.set(DURATION_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(DURATION_TIMER));
+        if (success)
+        {
+            DURATION_TIMER = timer;
+            DEBUG_SERIAL_LOG.printf("Duration timer set to %u\r\n", DURATION_TIMER);
+            return DURATION_TIMER;
+        }
     }
+    DEBUG_SERIAL_LOG.printf("Failed to set duration timer to %u\r\n", timer);
     return -1;
+}
+
+void fsm::resetTimers() {
+    fsm::setCountdownTimer(DEFAULT_COUNTDOWN_TIMER); 
+    fsm::setDurationTimer(DEFAULT_DURATION_TIMER);
+    fsm::setStillnessTimer(DEFAULT_STILLNESS_TIMER);
 }
 
 int fsm::setStillnessTimer(unsigned int timer)
 {
-    bool success = api.system.flash.set(STILLNESS_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(STILLNESS_TIMER));
-    STILLNESS_TIMER = timer;
-    if (success)
-    {
-        DEBUG_SERIAL_LOG.printf("Stillness timer set to %u\r\n", STILLNESS_TIMER);
-        return STILLNESS_TIMER;
+    if (timer >= MIN_STILLNESS_TIMER) {
+        bool success = api.system.flash.set(STILLNESS_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(STILLNESS_TIMER));
+        if (success)
+        {
+            STILLNESS_TIMER = timer;
+            DEBUG_SERIAL_LOG.printf("Stillness timer set to %u\r\n", STILLNESS_TIMER);
+            return STILLNESS_TIMER;
+        }
     }
+    DEBUG_SERIAL_LOG.printf("Failed to set stillness timer to %u\r\n", timer);
     return -1;
 }
 
@@ -137,7 +155,7 @@ int fsm::state2_duration(DoorSensor doorSensor, MotionSensor motionSensor)
     {
         fsm::stateHandler = fsm::state0_idle;
         DEBUG_SERIAL_LOG.println("Duration Alert!!");
-        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::DURATION}; 
+        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::DURATION};
         lora::sendUplink(msg);
         DEBUG_SERIAL_LOG.println("state 2 -> state 0: duration alert");
         return 1; // In case after returning to state0, conditions are met to go to state1
@@ -167,7 +185,7 @@ int fsm::state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
     {
         fsm::stateHandler = fsm::state0_idle;
         DEBUG_SERIAL_LOG.println("Stillness Alert!!");
-        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::STILLNESS}; 
+        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::STILLNESS};
         lora::sendUplink(msg);
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: stillness alert");
         return 1; // In case after returning to state0, conditions are met to go to state1
@@ -176,7 +194,7 @@ int fsm::state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
     {
         fsm::stateHandler = fsm::state0_idle;
         DEBUG_SERIAL_LOG.println("Duration Alert!!");
-        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::DURATION}; 
+        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::DURATION};
         lora::sendUplink(msg);
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: duration alert");
         return 1; // In case after returning to state0, conditions are met to go to state1

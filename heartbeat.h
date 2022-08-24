@@ -14,6 +14,23 @@ namespace heartbeat
      * @return The heartbeat interval in ms
      */
     unsigned int getInterval();
+
+    /**
+     * Sets the heartbeat interval.
+     * @param interval The heartbeat interval in ms
+     * @return The heartbeat interval in ms, -1 if unsuccessful
+     */
+    int setInterval(unsigned int timer); 
+
+    /**
+     * Resets the heartbeat timers to their default values.
+     */
+    void resetTimers();
+
+    /**
+     * Fetches heartbeat interval from eeprom.
+     */
+    void setupHeartbeat();
 }
 
 #endif // HEARTBEAT_H

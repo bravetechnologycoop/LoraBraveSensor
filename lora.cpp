@@ -42,6 +42,10 @@ static void lora::recvCallback(SERVICE_LORA_RECEIVE_T *data)
       DEBUG_SERIAL_LOG_MORE.printf("stillnessTimer set as %i\r\n", doc["stillnessTimer"].as<unsigned int>() * 1000);
       fsm::setStillnessTimer(doc["stillnessTimer"].as<unsigned int>() * 1000);
     }
+    if (doc.containsKey("heartbeatInterval")) {
+      DEBUG_SERIAL_LOG_MORE.printf("heartbeatInterval set as %i\r\n", doc["heartbeatInterval"].as<unsigned int>() * 1000);
+      heartbeat::setInterval(doc["heartbeatInterval"].as<unsigned int>() * 1000);
+    }
   }
   receiving = false;
 }
