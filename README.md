@@ -3,7 +3,7 @@
 # Project Overview
 
 ## Secrets File
-An example one can be found in our private [living doc](https://app.clickup.com/2434616/v/dc/2a9hr-2261/2a9hr-8442)
+An example one can be found in our private [living doc](https://app.clickup.com/2434616/v/dc/2a9hr-2261/2a9hr-8442). It can go inside the root directory of the project. 
 - DEVEUI: which can be found by scanning the QR code on the LoRaWan chip. 
 - APPEUI: currently we use the same APPEUI as the one for BraveButtons
 - APPEUI: APPEUI = hex(str(hex(DEVEUI)) + str(hex(APPEUI))), where '+' is string concatenation
@@ -15,7 +15,7 @@ Follow this [guide](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK32
 I recommend using VSCode's Arduino extension for easier file management, after going through the setup process with the Arduino IDE at least once. After opening the project with VSCode, if you notice red squiggly error messages for missing includes, follow [this](https://stackoverflow.com/questions/52234438/vs-code-giving-header-errors-for-arduino-missing-official-header) guide on how to fix them. On Windows 10, the board firmware files can be found at `C:/Users/{user}/AppData/Local/Arduino15/packages/rak_rui/hardware/stm32/3.4.2/cores/STM32WLE/component/rui_v3_api`, and can be added under `includePath` of the `.vscode/c_cpp_properties.json` file. 
 
 ## Serial Debugging
-Can be done with any serial monitor (e.g. Arduino, Arduino's VSCode Extension, PlatformIO, etc.) with BAUD rate of 115200. Remember to compile the file with `DEBUG_LOG` set to `true`, or `DEBUG_LOG_MORE` set to `true` in `main.h` to be able to see serial logs. 
+Can be done with any serial monitor (e.g. Arduino, Arduino's VSCode Extension, PlatformIO, etc.) with BAUD rate of 115200. Remember to compile the file with `DEBUG_LOG` set to `true`, or `DEBUG_LOG_MORE` set to `true` in `main.h` to be able to see serial logs. Setting the two values to `false` for compiliation of production code can potentially reduce power consumption, by skipping unusable serial signals. 
 
 ## Libraries
 - [Arduino](https://www.arduino.cc/reference/en/) for general firmware
