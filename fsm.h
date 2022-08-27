@@ -42,15 +42,15 @@ namespace fsm
     /**
      * resets the timers to their default values
      */
-    void resetTimers(); 
+    void resetTimers();
 
     /**
      * states in the FSM
      * @return the sleep time in milliseconds
      */
-    int state0_idle(DoorSensor doorSensor, MotionSensor motionSensor);
-    int state1_countdown(DoorSensor doorSensor, MotionSensor motionSensor);
-    int state2_duration(DoorSensor doorSensor, MotionSensor motionSensor);
+    int state0Idle(DoorSensor doorSensor, MotionSensor motionSensor);
+    int state1Countdown(DoorSensor doorSensor, MotionSensor motionSensor);
+    int state2Duration(DoorSensor doorSensor, MotionSensor motionSensor);
     int state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor);
 
     /**

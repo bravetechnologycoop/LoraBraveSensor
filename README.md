@@ -3,7 +3,7 @@
 # Project Overview
 
 ## Secrets File
-An example one can be found in our private [living doc](https://app.clickup.com/2434616/v/dc/2a9hr-2261/2a9hr-8442). It can go inside the root directory of the project. 
+An example one can be found in our private [living doc](https://app.clickup.com/2434616/v/dc/2a9hr-2261/2a9hr-8442). It must go inside the root directory of the project. 
 - DEVEUI: which can be found by scanning the QR code on the LoRaWan chip. 
 - APPEUI: currently we use the same APPEUI as the one for BraveButtons
 - APPEUI: APPEUI = hex(str(hex(DEVEUI)) + str(hex(APPEUI))), where '+' is string concatenation
