@@ -22,7 +22,7 @@ unsigned int heartbeat::getRemainingDuration()
     if (heartbeatTimer <= 0)
     {
         heartbeatTimer = heartbeatInterval;
-        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::HEARTBEAT};
+        lora::uplinkMessage msg = {.type = lora::HEARTBEAT};
         lora::sendUplink(msg);
         DEBUG_SERIAL_LOG.println("Heartbeat");
     }

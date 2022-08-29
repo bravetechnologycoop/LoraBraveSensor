@@ -19,8 +19,8 @@ AnalogSensor battery = AnalogSensor(BATTERY_PIN);
 void setup()
 {
   lora::setupOTAA();
-  fsm::setupFSM();    
-  heartbeat::setupHeartbeat(); 
+
+  lora::sendUplink("Modify the comment if this gets sent :3"); // No idea why first message always fails to send
 
   pinMode(EEPROM_RESET_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(EEPROM_RESET_PIN), resetEeprom, RISING);
@@ -29,8 +29,9 @@ void setup()
       digitalPinToInterrupt(DOOR_SENSOR_PIN), [] {}, CHANGE);
   attachInterrupt(
       digitalPinToInterrupt(MOTION_SENSOR_PIN), [] {}, CHANGE);
-
-  lora::sendUplink("Modify the comment if this gets sent :3"); // No idea why first message always fails to send
+      
+  fsm::setupFSM();    
+  heartbeat::setupHeartbeat(); 
 }
 
 void loop()

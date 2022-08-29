@@ -5,13 +5,14 @@
 #include "lora.h"
 #include "flashAddresses.h"
 #include "main.h"
+#include "lora.h"
 
 fsm::stateHandler_t fsm::stateHandler = fsm::state0Idle;
 unsigned int lastStateHandleTime = millis();
 
-const unsigned int MAX_COUNTDOWN_TIMER = 20000;     // 20s
-const unsigned int MIN_DURATION_TIMER = 0; 
-const unsigned int MIN_STILLNESS_TIMER = 0; 
+const unsigned int MAX_COUNTDOWN_TIMER = 20000; // 20s
+const unsigned int MAX_DURATION_TIMER = 86400000; // 24h
+const unsigned int MAX_STILLNESS_TIMER = 86400000; // 24h
 const unsigned int DEFAULT_COUNTDOWN_TIMER = 15000; // 15s
 const unsigned int DEFAULT_DURATION_TIMER = 30000;  // 30s
 const unsigned int DEFAULT_STILLNESS_TIMER = 15000; // 15s
@@ -33,6 +34,8 @@ void fsm::setupFSM()
     if (!success)
     {
         DEBUG_SERIAL_LOG.println("Error reading flash");
+        lora::uplinkMessage msg = {.type = lora::EEPROM_ERROR};
+        lora::sendUplink(msg);
     }
     DEBUG_SERIAL_LOG.printf("Timers constants: countdown: %u, duration: %u, stillness: %u\r\n", countdownTimer, countdownTimer, stillnessTimer);
 }
@@ -55,7 +58,7 @@ int fsm::setCountdownTimer(unsigned int timer)
 
 int fsm::setDurationTimer(unsigned int timer)
 {
-    if (timer >= MIN_DURATION_TIMER)
+    if (timer <= MAX_DURATION_TIMER)
     {
         bool success = api.system.flash.set(DURATION_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(countdownTimer));
         if (success)
@@ -71,7 +74,7 @@ int fsm::setDurationTimer(unsigned int timer)
 
 int fsm::setStillnessTimer(unsigned int timer)
 {
-    if (timer >= MIN_STILLNESS_TIMER)
+    if (timer <= MAX_STILLNESS_TIMER)
     {
         bool success = api.system.flash.set(STILLNESS_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(stillnessTimer));
         if (success)
@@ -155,7 +158,7 @@ int fsm::state2Duration(DoorSensor doorSensor, MotionSensor motionSensor)
     {
         fsm::stateHandler = fsm::state0Idle;
         DEBUG_SERIAL_LOG.println("Duration Alert!!");
-        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::DURATION};
+        lora::uplinkMessage msg = {.type = lora::DURATION};
         lora::sendUplink(msg);
         DEBUG_SERIAL_LOG.println("state 2 -> state 0: duration alert");
         return 1; // In case after returning to state0, conditions are met to go to state1
@@ -185,7 +188,7 @@ int fsm::state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
     {
         fsm::stateHandler = fsm::state0Idle;
         DEBUG_SERIAL_LOG.println("Stillness Alert!!");
-        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::STILLNESS};
+        lora::uplinkMessage msg = {.type = lora::STILLNESS};
         lora::sendUplink(msg);
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: stillness alert");
         return 1; // In case after returning to state0, conditions are met to go to state1
@@ -194,7 +197,7 @@ int fsm::state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor)
     {
         fsm::stateHandler = fsm::state0Idle;
         DEBUG_SERIAL_LOG.println("Duration Alert!!");
-        lora::uplinkMessage msg = {.alertType = lora::uplinkMessage::DURATION};
+        lora::uplinkMessage msg = {.type = lora::DURATION};
         lora::sendUplink(msg);
         DEBUG_SERIAL_LOG.println("state 3 -> state 0: duration alert");
         return 1; // In case after returning to state0, conditions are met to go to state1

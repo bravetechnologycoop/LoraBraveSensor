@@ -3,10 +3,11 @@
 # Project Overview
 
 ## Secrets File
-An example one can be found in our private [living doc](https://app.clickup.com/2434616/v/dc/2a9hr-2261/2a9hr-8442). It must go inside the root directory of the project. 
+Make a copy of `secretsExample.h` and rename it to `secrets.h`. It must go inside the root directory of the project. Replace the values for the DEVEUI, APPEUI, and APPKEY with values as follows: 
 - DEVEUI: which can be found by scanning the QR code on the LoRaWan chip. 
 - APPEUI: currently we use the same APPEUI as the one for BraveButtons
-- APPEUI: APPEUI = hex(str(hex(DEVEUI)) + str(hex(APPEUI))), where '+' is string concatenation
+- APPKEY: APPEUI = hex(str(hex(DEVEUI)) + str(hex(APPEUI))), where '+' is string concatenation
+An example one can be found in our private [living doc](https://app.clickup.com/2434616/v/dc/2a9hr-2261/2a9hr-8442). 
 
 ## Setup
 Follow this [guide](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3272S-Breakout-Board/Quickstart/#rak3272s-breakout-board-as-a-stand-alone-device-using-rui3) on how to setup. The LoraBraveSensor directory can subsitute the Arduino Serial demo, as a guide on how to compile and upload our custom firmware. After going throught the entire process, I recommend using vscode's Arduino extension for easier file management. 
@@ -27,6 +28,16 @@ Can be done with any serial monitor (e.g. Arduino, Arduino's VSCode Extension, P
 ## State Machine
 Based on the [state machine diagram](https://docs.google.com/drawings/d/14JmUKDO-Gs7YLV5bhE67ZYnGeZbBg-5sq0fQYwkhkI0/edit) from the original Particle BraveSensor
 
+## PINS
+[Diagram for pins](https://docs.rakwireless.com/Product-Categories/WisDuo/RAK3272S-Breakout-Board/Datasheet/#specifications)
+
+SPI_MOSI (PA7) is the inverted door pin (low is door open, high is door closed). 
+
+SPI_MISO (PA6) is the inverted motion pin (low is motion, high is no motion).
+
+SPI_CLK (PA5) is the analog battery measurement pin (untested so far, usually returns 8### as the measurement). 
+
+SPI_CS (PA4) is the eeprom reset pin. 
 
 ## Sensors
 
@@ -57,5 +68,6 @@ decodes to `{"alertType":"DurationAlert","battery":8192,"countdownTimer":15,"dur
 ## Power Saving Measures
 The system is designed to go to sleep, unless there are changes to the digital input pins, or a timer interrupt. Limitation's of RUI3, results in a specific implementation -- more info can be found [here](https://forum.rakwireless.com/t/rui3-wake-on-interrupt/7460/8). 
 
-## Flash Memory
+## Flash Memory (EEPROM)
 Saving timers (e.g. countdown/duration/stillness) is done using the [RUI3 flash library](https://docs.rakwireless.com/RUI3/System/#flash). 
+The eeprom can be reset to the default values by rising the eeprom reset pin SPI_CS (PA4). 

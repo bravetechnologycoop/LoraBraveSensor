@@ -5,20 +5,14 @@
 
 namespace lora
 {
+    const std::string DURATION = "duration"; 
+    const std::string STILLNESS = "stillness"; 
+    const std::string HEARTBEAT = "heartbeat";
+    const std::string EEPROM_ERROR = "eepromError"; 
     struct uplinkMessage
     {
-        enum alertType_t { DURATION = 0, STILLNESS = 1, HEARTBEAT = 2 };
-        alertType_t alertType;
+        std::string type; 
     };
-    const char JSON_ALERT_TYPE_KEY[] = "alertType"; 
-    const char JSON_ALERT_TYPE_VALUE_DURATION_ALERT[] = "DurationAlert";
-    const char JSON_ALERT_TYPE_VALUE_STILLNESS_ALERT[] = "StillnessAlert";
-    const char JSON_ALERT_TYPE_VALUE_HEARTBEAT[] = "Heartbeat";
-    const char JSON_BATTERY_LEVEL_KEY[] = "batteryLevel"; 
-    const char JSON_COUNTDOWN_TIMER_KEY[] = "countdownTimer";
-    const char JSON_DURATION_TIMER_KEY[] = "durationTimer";
-    const char JSON_STILLNESS_TIMER_KEY[] = "stillnessTimer";
-    const char JSON_HEARTBEAT_INTERVAL_KEY[] = "heartbeatInterval";
 
     /**
      * setup the OTAA protocol and establish a connection with the gateway

@@ -207,19 +207,8 @@ void lora::sendUplink(char *payload)
 
 void lora::sendUplink(lora::uplinkMessage msg)
 {
-  DynamicJsonDocument doc(1024);
-  switch (msg.alertType)
-  {
-  case lora::uplinkMessage::DURATION:
-    doc["alertType"] = "Duration";
-    break;
-  case lora::uplinkMessage::STILLNESS:
-    doc["alertType"] = "Stillness";
-    break;
-  case lora::uplinkMessage::HEARTBEAT:
-    doc["alertType"] = "Heartbeat";
-    break;
-  }
+  DynamicJsonDocument doc(1024); 
+  doc["type"] = msg.type; 
   doc["battery"] = battery.getValue();
   doc["countdownTimer"] = fsm::getCountdownTimer() / 1000;
   doc["durationTimer"] = fsm::getDurationTimer() / 1000;
