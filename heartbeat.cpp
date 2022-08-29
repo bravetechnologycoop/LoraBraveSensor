@@ -63,6 +63,8 @@ void heartbeat::setupHeartbeat()
     }
     else
     {
-        DEBUG_SERIAL_LOG.println("Could not read heartbeat interval from flash");
+        DEBUG_SERIAL_LOG.println("ERROR: could not read heartbeat interval from flash");
+        lora::uplinkMessage msg = {.type = lora::EEPROM_ERROR};
+        lora::sendUplink(msg);
     }
 }

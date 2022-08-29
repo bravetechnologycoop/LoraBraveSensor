@@ -27,7 +27,7 @@ namespace lora
 
     /**
      * sends uplink message to the server
-     * @param payload the message to send, using ArduinoJson library
+     * @param msg the message to send, only the message type needs to be set
      */
     void sendUplink(lora::uplinkMessage msg); 
 

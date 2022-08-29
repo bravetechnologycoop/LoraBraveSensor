@@ -33,7 +33,7 @@ void fsm::setupFSM()
                    api.system.flash.get(STILLNESS_TIMER_FLASH_ADDRESS, (uint8_t *)&stillnessTimer, sizeof(stillnessTimer));
     if (!success)
     {
-        DEBUG_SERIAL_LOG.println("Error reading flash");
+        DEBUG_SERIAL_LOG.println("ERROR: reading fsm timer values flash");
         lora::uplinkMessage msg = {.type = lora::EEPROM_ERROR};
         lora::sendUplink(msg);
     }
@@ -95,7 +95,7 @@ unsigned int fsm::getCountdownTimer()
 
 unsigned int fsm::getDurationTimer()
 {
-    return countdownTimer;
+    return durationTimer;
 }
 
 unsigned int fsm::getStillnessTimer()

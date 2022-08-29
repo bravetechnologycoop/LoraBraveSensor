@@ -42,7 +42,8 @@ static void lora::recvCallback(SERVICE_LORA_RECEIVE_T *data)
       DEBUG_SERIAL_LOG_MORE.printf("stillnessTimer set as %i\r\n", doc["stillnessTimer"].as<unsigned int>() * 1000);
       fsm::setStillnessTimer(doc["stillnessTimer"].as<unsigned int>() * 1000);
     }
-    if (doc.containsKey("heartbeatInterval")) {
+    if (doc.containsKey("heartbeatInterval"))
+    {
       DEBUG_SERIAL_LOG_MORE.printf("heartbeatInterval set as %i\r\n", doc["heartbeatInterval"].as<unsigned int>() * 1000);
       heartbeat::setInterval(doc["heartbeatInterval"].as<unsigned int>() * 1000);
     }
@@ -132,17 +133,23 @@ void lora::setupOTAA()
     api.lorawan.join();
     delay(10000);
     if (api.lorawan.njs.get() != 0)
+    {
       break;
+    }
     DEBUG_SERIAL_LOG.print("Wait for LoRaWAN join 2...");
     api.lorawan.join();
     delay(10000);
     if (api.lorawan.njs.get() != 0)
+    {
       break;
+    }
     DEBUG_SERIAL_LOG.print("Wait for LoRaWAN join 3...");
     api.lorawan.join();
     delay(10000);
     if (api.lorawan.njs.get() != 0)
+    {
       break;
+    }
     DEBUG_SERIAL_LOG.println("Connection failed! Sleeping...");
     while (true)
       api.system.sleep.all();
@@ -207,8 +214,8 @@ void lora::sendUplink(char *payload)
 
 void lora::sendUplink(lora::uplinkMessage msg)
 {
-  DynamicJsonDocument doc(1024); 
-  doc["type"] = msg.type; 
+  DynamicJsonDocument doc(1024);
+  doc["type"] = msg.type;
   doc["battery"] = battery.getValue();
   doc["countdownTimer"] = fsm::getCountdownTimer() / 1000;
   doc["durationTimer"] = fsm::getDurationTimer() / 1000;
