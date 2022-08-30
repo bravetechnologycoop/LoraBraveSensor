@@ -29,18 +29,23 @@ static void lora::recvCallback(SERVICE_LORA_RECEIVE_T *data)
     deserializeJson(doc, (char *)data->Buffer);
     if (doc.containsKey("countdownTimer"))
     {
-      DEBUG_SERIAL_LOG.printf("countdownTimer set as %u\r\n", doc["countdownTimer"].as<unsigned int>() * 1000);
+      DEBUG_SERIAL_LOG_MORE.printf("countdownTimer set as %u\r\n", doc["countdownTimer"].as<unsigned int>() * 1000);
       fsm::setCountdownTimer(doc["countdownTimer"].as<unsigned int>() * 1000);
     }
     if (doc.containsKey("durationTimer"))
     {
-      DEBUG_SERIAL_LOG.printf("durationTimer set as %i\r\n", doc["durationTimer"].as<unsigned int>() * 1000);
+      DEBUG_SERIAL_LOG_MORE.printf("durationTimer set as %i\r\n", doc["durationTimer"].as<unsigned int>() * 1000);
       fsm::setDurationTimer(doc["durationTimer"].as<unsigned int>() * 1000);
     }
     if (doc.containsKey("stillnessTimer"))
     {
-      DEBUG_SERIAL_LOG.printf("stillnessTimer set as %i\r\n", doc["stillnessTimer"].as<unsigned int>() * 1000);
+      DEBUG_SERIAL_LOG_MORE.printf("stillnessTimer set as %i\r\n", doc["stillnessTimer"].as<unsigned int>() * 1000);
       fsm::setStillnessTimer(doc["stillnessTimer"].as<unsigned int>() * 1000);
+    }
+    if (doc.containsKey("heartbeatInterval"))
+    {
+      DEBUG_SERIAL_LOG_MORE.printf("heartbeatInterval set as %i\r\n", doc["heartbeatInterval"].as<unsigned int>() * 1000);
+      heartbeat::setInterval(doc["heartbeatInterval"].as<unsigned int>() * 1000);
     }
   }
   receiving = false;
@@ -127,17 +132,27 @@ void lora::setupOTAA()
     DEBUG_SERIAL_LOG.print("Wait for LoRaWAN join 1...");
     api.lorawan.join();
     delay(10000);
-    if (api.lorawan.njs.get() != 0) break; 
+    if (api.lorawan.njs.get() != 0)
+    {
+      break;
+    }
     DEBUG_SERIAL_LOG.print("Wait for LoRaWAN join 2...");
     api.lorawan.join();
     delay(10000);
-    if (api.lorawan.njs.get() != 0) break; 
+    if (api.lorawan.njs.get() != 0)
+    {
+      break;
+    }
     DEBUG_SERIAL_LOG.print("Wait for LoRaWAN join 3...");
     api.lorawan.join();
     delay(10000);
-    if (api.lorawan.njs.get() != 0) break; 
+    if (api.lorawan.njs.get() != 0)
+    {
+      break;
+    }
     DEBUG_SERIAL_LOG.println("Connection failed! Sleeping...");
-    while (true) api.system.sleep.all(); 
+    while (true)
+      api.system.sleep.all();
   }
 
   if (!api.lorawan.adr.set(true))
@@ -197,16 +212,19 @@ void lora::sendUplink(char *payload)
   DEBUG_SERIAL_LOG_MORE.println("End of uplink routine");
 }
 
-void lora::sendUplink(DynamicJsonDocument doc) {
-    doc["battery"] = battery.getValue();
-    doc["countdownTimer"] = fsm::getCountdownTimer() / 1000;
-    doc["durationTimer"] = fsm::getDurationTimer() / 1000;
-    doc["stillnessTimer"] = fsm::getStillnessTimer() / 1000;
-    doc["heartbeatInterval"] = heartbeat::getInterval() / 1000;
+void lora::sendUplink(lora::uplinkMessage msg)
+{
+  DynamicJsonDocument doc(1024);
+  doc["type"] = msg.type;
+  doc["battery"] = battery.getValue();
+  doc["countdownTimer"] = fsm::getCountdownTimer() / 1000;
+  doc["durationTimer"] = fsm::getDurationTimer() / 1000;
+  doc["stillnessTimer"] = fsm::getStillnessTimer() / 1000;
+  doc["heartbeatInterval"] = heartbeat::getInterval() / 1000;
 
-    char output[1024] = ""; // arbitrary size
-    serializeJson(doc, output, sizeof(output)); 
+  char output[1024] = ""; // arbitrary size
+  serializeJson(doc, output, sizeof(output));
 
-    DEBUG_SERIAL_LOG.printf("Json Uplink: %s\r\n", output);
-    sendUplink(output);
+  DEBUG_SERIAL_LOG.printf("Json Uplink: %s\r\n", output);
+  sendUplink(output);
 }

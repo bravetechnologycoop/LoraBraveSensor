@@ -5,6 +5,15 @@
 
 namespace lora
 {
+    const std::string DURATION = "duration"; 
+    const std::string STILLNESS = "stillness"; 
+    const std::string HEARTBEAT = "heartbeat";
+    const std::string EEPROM_ERROR = "eepromError"; 
+    struct uplinkMessage
+    {
+        std::string type; 
+    };
+
     /**
      * setup the OTAA protocol and establish a connection with the gateway
      */
@@ -18,9 +27,9 @@ namespace lora
 
     /**
      * sends uplink message to the server
-     * @param payload the message to send, using ArduinoJson library
+     * @param msg the message to send, only the message type needs to be set
      */
-    void sendUplink(DynamicJsonDocument payload);
+    void sendUplink(lora::uplinkMessage msg); 
 
     /**
      * the callback function for the LoRa module to call when a message is received

@@ -10,6 +10,7 @@
 #define DOOR_SENSOR_PIN PA7
 #define MOTION_SENSOR_PIN PA6
 #define BATTERY_PIN PA5
+#define EEPROM_RESET_PIN PA4
 
 DoorSensor doorSensor = DoorSensor(DOOR_SENSOR_PIN);
 MotionSensor motionSensor = MotionSensor(MOTION_SENSOR_PIN);
@@ -18,12 +19,19 @@ AnalogSensor battery = AnalogSensor(BATTERY_PIN);
 void setup()
 {
   lora::setupOTAA();
-  fsm::setupFSM();
+
+  lora::sendUplink("Modify the comment if this gets sent :3"); // No idea why first message always fails to send
+
+  pinMode(EEPROM_RESET_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(EEPROM_RESET_PIN), resetEeprom, RISING);
+
   attachInterrupt(
       digitalPinToInterrupt(DOOR_SENSOR_PIN), [] {}, CHANGE);
   attachInterrupt(
       digitalPinToInterrupt(MOTION_SENSOR_PIN), [] {}, CHANGE);
-  lora::sendUplink("Modify the comment if this gets sent :3"); // No idea why first message always fails to send
+      
+  fsm::setupFSM();    
+  heartbeat::setupHeartbeat(); 
 }
 
 void loop()
@@ -49,4 +57,11 @@ void loop()
   }
   api.system.sleep.all();
   DEBUG_SERIAL_LOG_MORE.println("Woke up");
+}
+
+void resetEeprom()
+{
+    DEBUG_SERIAL_LOG.printf("Resetting EEPROM\r\n");
+    fsm::resetTimers(); 
+    heartbeat::resetTimers(); 
 }

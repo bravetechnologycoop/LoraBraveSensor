@@ -1,7 +1,0 @@
-{
-    "configuration": "debug=l0",
-    "board": "rak_rui:stm32:WisDuoRAK3172EvaluationBoard",
-    "sketch": "LoraBraveSensor.ino",
-    "port": "COM6", 
-    "output": "./build"
-}
