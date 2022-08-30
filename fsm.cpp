@@ -60,12 +60,12 @@ int fsm::setDurationTimer(unsigned int timer)
 {
     if (timer <= MAX_DURATION_TIMER)
     {
-        bool success = api.system.flash.set(DURATION_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(countdownTimer));
+        bool success = api.system.flash.set(DURATION_TIMER_FLASH_ADDRESS, (uint8_t *)&timer, sizeof(durationTimer));
         if (success)
         {
-            countdownTimer = timer;
-            DEBUG_SERIAL_LOG.printf("Duration timer set to %u\r\n", countdownTimer);
-            return countdownTimer;
+            durationTimer = timer;
+            DEBUG_SERIAL_LOG.printf("Duration timer set to %u\r\n", durationTimer);
+            return durationTimer;
         }
     }
     DEBUG_SERIAL_LOG.printf("Failed to set duration timer to %u\r\n", timer);
