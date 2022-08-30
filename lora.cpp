@@ -10,16 +10,16 @@
 
 #define OTAA_PERIOD (20000)
 
-const int DOWNLINK_INTERVAL = 2000; 
-int lastHandledTime = millis(); 
-int loraTimer = DOWNLINK_INTERVAL; 
+const int DOWNLINK_INTERVAL = 2000;
+int lastHandledTime = millis();
+int loraTimer = DOWNLINK_INTERVAL;
 volatile bool uplinkProcess = false;
 
 static void lora::recvCallback(SERVICE_LORA_RECEIVE_T *data)
 {
   if (data->BufferSize > 0)
   {
-    DEBUG_SERIAL_LOG.println("Something received!"); 
+    DEBUG_SERIAL_LOG.println("Something received!");
     for (int i = 0; i < data->BufferSize; i++)
     {
       DEBUG_SERIAL_LOG.printf("%x", data->Buffer[i]);
@@ -58,8 +58,9 @@ static void lora::joinCallback(int32_t status)
   DEBUG_SERIAL_LOG.printf("Join status: %d\r\n", status);
 }
 
-static void lora::sendCallback(int32_t status) {
-  DEBUG_SERIAL_LOG.printf("Send status: %d\r\n", status); 
+static void lora::sendCallback(int32_t status)
+{
+  DEBUG_SERIAL_LOG.printf("Send status: %d\r\n", status);
 }
 
 void lora::setupOTAA()
@@ -180,17 +181,20 @@ void lora::sendUplink(char *payload)
   DEBUG_SERIAL_LOG_MORE.println("Starting uplink routine");
   /** Send the data package */
 
-  if (api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 1)) {
-    DEBUG_SERIAL_LOG.println("Sending request success"); 
-  } else {
+  if (api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 1))
+  {
+    DEBUG_SERIAL_LOG.println("Sending request success");
+  }
+  else
+  {
     DEBUG_SERIAL_LOG.println("Sending request failed");
   }
-  delay(DOWNLINK_INTERVAL); // Blocking delay that significantly improves uplink success rate from testing
-  
+  delay(DOWNLINK_INTERVAL); // Blocking delay that significantly improves uplink success rate from testing (needs more investigation, espeically in non-Kerry's home environments)
+
   // Infastructure for nonblocking delay below
   uplinkProcess = true;
   lastHandledTime = millis();
-  loraTimer = DOWNLINK_INTERVAL; 
+  loraTimer = DOWNLINK_INTERVAL;
 }
 
 void lora::sendUplink(lora::uplinkMessage msg)
@@ -215,18 +219,20 @@ bool lora::isUplinkInProgress()
   return uplinkProcess;
 }
 
-int lora::getRemainingDuration() {  
-  if (uplinkProcess) {
+int lora::getRemainingDuration()
+{
+  if (uplinkProcess)
+  {
     loraTimer -= millis() - lastHandledTime;
     lastHandledTime = millis();
 
     if (loraTimer <= 0)
     {
-        uplinkProcess = false; 
-        DEBUG_SERIAL_LOG.println("Uplink routine complete");
-        return INT_MAX; 
+      uplinkProcess = false;
+      DEBUG_SERIAL_LOG.println("Uplink routine complete");
+      return INT_MAX;
     }
-    return loraTimer;    
+    return loraTimer;
   }
-  return INT_MAX; 
+  return INT_MAX;
 }
