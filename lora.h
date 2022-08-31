@@ -45,5 +45,16 @@ namespace lora
      * the callback function for the LoRa module to call when a message is sent
      */
     static void sendCallback(int32_t status);
+
+    /**
+     * @returns whether or not a sending process is currently occuring or not
+     */
+    bool isUplinkInProgress();
+
+    /**
+     * Gets the remaining uplink sleep duration. 
+     * @returns the remaining uplink sleep duration in milliseconds
+     */
+    int getRemainingDuration(); 
 }
 #endif // OTAA_H

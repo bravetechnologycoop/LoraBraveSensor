@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 
+#define DOOR_SENSOR_PIN PA7
+#define MOTION_SENSOR_PIN PA6
+
 /**
  * Sensor class
  *
@@ -90,6 +93,14 @@ private:
      */
     int getValue();
 }; 
+
+struct SensorData {
+    bool isDoorOpen;
+    bool isThereMotion;
+};
+
+bool operator == (SensorData& lhs, SensorData& rhs);
+bool operator != (SensorData& lhs, SensorData& rhs);
 
 extern AnalogSensor battery; 
 

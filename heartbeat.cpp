@@ -14,7 +14,7 @@ static int heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
 static int heartbeatTimer = 0;
 static int lastHeartbeatHandleTime = 0;
 
-unsigned int heartbeat::getRemainingDuration()
+int heartbeat::getRemainingDuration()
 {
     heartbeatTimer -= millis() - lastHeartbeatHandleTime;
     lastHeartbeatHandleTime = millis();
@@ -29,7 +29,7 @@ unsigned int heartbeat::getRemainingDuration()
     return heartbeatTimer;
 }
 
-unsigned int heartbeat::getInterval()
+int heartbeat::getInterval()
 {
     return heartbeatInterval;
 }

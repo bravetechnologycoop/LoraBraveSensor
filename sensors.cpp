@@ -38,3 +38,13 @@ int AnalogSensor::getValue()
 {
     return analogRead(pin);
 }
+
+bool operator == (SensorData& lhs, SensorData& rhs)
+{
+    return lhs.isDoorOpen == rhs.isDoorOpen && lhs.isThereMotion == rhs.isThereMotion;
+}
+
+bool operator != (SensorData& lhs, SensorData& rhs)
+{
+    return !(lhs == rhs);
+}

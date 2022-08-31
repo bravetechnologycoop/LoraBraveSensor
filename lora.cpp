@@ -1,19 +1,22 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <limits.h>
 #include "fsm.h"
 #include "heartbeat.h"
 #include "secrets.h"
 #include "main.h"
 #include "lora.h"
+#include "systemTimers.h"
 
 #define OTAA_PERIOD (20000)
 
-bool sending = false;
-bool receiving = false;
+const int DOWNLINK_INTERVAL = 2000;
+int lastHandledTime = millis();
+int loraTimer = DOWNLINK_INTERVAL;
+volatile bool uplinkProcess = false;
 
 static void lora::recvCallback(SERVICE_LORA_RECEIVE_T *data)
 {
-  receiving = true;
   if (data->BufferSize > 0)
   {
     DEBUG_SERIAL_LOG.println("Something received!");
@@ -48,7 +51,6 @@ static void lora::recvCallback(SERVICE_LORA_RECEIVE_T *data)
       heartbeat::setInterval(doc["heartbeatInterval"].as<unsigned int>() * 1000);
     }
   }
-  receiving = false;
 }
 
 static void lora::joinCallback(int32_t status)
@@ -58,15 +60,7 @@ static void lora::joinCallback(int32_t status)
 
 static void lora::sendCallback(int32_t status)
 {
-  if (status == 0)
-  {
-    DEBUG_SERIAL_LOG.println("Successfully sent (callback)");
-  }
-  else
-  {
-    DEBUG_SERIAL_LOG.println("Sending failed (callback)");
-  }
-  sending = false;
+  DEBUG_SERIAL_LOG.printf("Send status: %d\r\n", status);
 }
 
 void lora::setupOTAA()
@@ -151,8 +145,7 @@ void lora::setupOTAA()
       break;
     }
     DEBUG_SERIAL_LOG.println("Connection failed! Sleeping...");
-    while (true)
-      api.system.sleep.all();
+    api.system.sleep.all(600000); // Sleep for 10 minutes
   }
 
   if (!api.lorawan.adr.set(true))
@@ -160,7 +153,7 @@ void lora::setupOTAA()
     DEBUG_SERIAL_LOG.printf("LoRaWan OTAA - set adaptive data rate is incorrect! \r\n");
     return;
   }
-  if (!api.lorawan.rety.set(1))
+  if (!api.lorawan.rety.set(3))
   {
     DEBUG_SERIAL_LOG.printf("LoRaWan OTAA - set retry times is incorrect! \r\n");
     return;
@@ -187,29 +180,21 @@ void lora::sendUplink(char *payload)
 {
   DEBUG_SERIAL_LOG_MORE.println("Starting uplink routine");
   /** Send the data package */
-  sending = true;
-  DEBUG_SERIAL_LOG.println("Sending request attempt 1");
-  if (!api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 2, true, 2))
+
+  if (api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 1))
   {
-    for (int i = 2; i < 4 && !api.lorawan.send(strlen(payload), (uint8_t *)&payload[0], 2, true, 2); i++)
-    {
-      delay(3000);
-      DEBUG_SERIAL_LOG.printf("Sending request attempt %i\r\n", i);
-    }
+    DEBUG_SERIAL_LOG.println("Sending request success");
   }
-  while (sending)
+  else
   {
-    DEBUG_SERIAL_LOG.println("Waiting for sending...");
-    delay(1500); // block until sending complete, to prevent sleeping during send, ceiling for usual send time
+    DEBUG_SERIAL_LOG.println("Sending request failed");
   }
-  delay(3000); // for downlinks to be received
-  while (receiving)
-  {
-    DEBUG_SERIAL_LOG.println("Waiting for receiving...");
-    delay(1500); // block until receiving complete, to prevent sleeping during receive, ceiling for usual receive time
-  }
-  delay(1500); // for acknowledgement to be sent
-  DEBUG_SERIAL_LOG_MORE.println("End of uplink routine");
+  delay(DOWNLINK_INTERVAL); // Blocking delay that significantly improves uplink success rate from testing (needs more investigation, espeically in non-Kerry's home environments)
+
+  // Infastructure for nonblocking delay below
+  uplinkProcess = true;
+  lastHandledTime = millis();
+  loraTimer = DOWNLINK_INTERVAL;
 }
 
 void lora::sendUplink(lora::uplinkMessage msg)
@@ -227,4 +212,27 @@ void lora::sendUplink(lora::uplinkMessage msg)
 
   DEBUG_SERIAL_LOG.printf("Json Uplink: %s\r\n", output);
   sendUplink(output);
+}
+
+bool lora::isUplinkInProgress()
+{
+  return uplinkProcess;
+}
+
+int lora::getRemainingDuration()
+{
+  if (uplinkProcess)
+  {
+    loraTimer -= millis() - lastHandledTime;
+    lastHandledTime = millis();
+
+    if (loraTimer <= 0)
+    {
+      uplinkProcess = false;
+      DEBUG_SERIAL_LOG.println("Uplink routine complete");
+      return INT_MAX;
+    }
+    return loraTimer;
+  }
+  return INT_MAX;
 }

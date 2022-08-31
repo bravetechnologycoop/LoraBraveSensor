@@ -11,6 +11,23 @@ namespace fsm
     void setupFSM();
 
     /**
+     * adds to the fsm queue the next dataset for the FSM to process
+     */
+    void addToSensorDataQueue();
+
+     /**
+     * check if the fsm queue is empty
+     * @return true if empty, false otherwise
+     */
+    bool isSensorDataQueueEmpty();
+
+    /**
+     * runs instance of state machine
+     * @return duration for device to sleep for
+     */
+    int handleState();
+
+    /**
      * timer getters
      * @returns the current timer value in ms
      */
@@ -19,24 +36,12 @@ namespace fsm
     unsigned int getStillnessTimer();
 
     /**
-     * sets the countdown timer value stored in flash memory
-     * @param countdownTimer the countdown timer value to store in ms
-     * @returns countdown timer if successful, -1 otherwise
+     * sets the timer value stored in flash memory
+     * @param timer the  timer value to store in ms
+     * @returns timer value in ms if successful, -1 otherwise
      */
     int setCountdownTimer(unsigned int timer);
-
-    /**
-     * sets the duration timer value stored in flash memory
-     * @param durationTimer the duration timer value to store in ms
-     * @returns duration timer if successful, -1 otherwise
-     */
     int setDurationTimer(unsigned int timer);
-
-    /**
-     * sets the stillness timer value stored in flash memory
-     * @param stillnessTimer the stillness timer value to store in ms
-     * @returns stillness timer if successful, -1 otherwise
-     */
     int setStillnessTimer(unsigned int timer);
 
     /**
@@ -48,16 +53,16 @@ namespace fsm
      * states in the FSM
      * @return the sleep time in milliseconds
      */
-    int state0Idle(DoorSensor doorSensor, MotionSensor motionSensor);
-    int state1Countdown(DoorSensor doorSensor, MotionSensor motionSensor);
-    int state2Duration(DoorSensor doorSensor, MotionSensor motionSensor);
-    int state3_stillness(DoorSensor doorSensor, MotionSensor motionSensor);
+    int state0Idle(SensorData sensorData);
+    int state1Countdown(SensorData sensorData);
+    int state2Duration(SensorData sensorData);
+    int state3Stillness(SensorData sensorData);
 
     /**
      * the current state of the FSM
      * @returns the amount of time for the system to sleep in ms, until the next countdown threshold
      */
-    typedef int (*stateHandler_t)(DoorSensor doorSensor, MotionSensor motionSensor);
+    typedef int (*stateHandler_t)(SensorData sensorData);
     extern stateHandler_t stateHandler;
 }
 
