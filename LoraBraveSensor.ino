@@ -41,22 +41,26 @@ void loop()
   DEBUG_SERIAL_LOG_MORE.printf("State sleep timer: %is\r\n", stateSleepTimer / 1000);
   int sleepDuration = min(heartBeatTimer, min(uplinkTimer, stateSleepTimer));
 
-  if (sleepDuration > 0)
-  {
-    api.system.timer.create((RAK_TIMER_ID)FSM_TIMER, (RAK_TIMER_HANDLER)fsm::addToSensorDataQueue, RAK_TIMER_ONESHOT);
-    api.system.timer.start((RAK_TIMER_ID)FSM_TIMER, sleepDuration, (void *)1);
-  }
-  if (fsm::isSensorDataQueueEmpty() && !lora::isUplinkInProgress())
-  {
-    DEBUG_SERIAL_LOG.printf("Attempting to sleep for %is...", sleepDuration / 1000);
-    DEBUG_SERIAL_LOG.println("state queue empty, lora complete, sleeping");
-    api.system.sleep.all();
-    DEBUG_SERIAL_LOG.println("Woke up");
-  }
-  else
-  {
-    DEBUG_SERIAL_LOG_MORE.println("State queue not empty or lora not complete");
-  }
+  // if (sleepDuration > 0)
+  // {
+  //   api.system.timer.create((RAK_TIMER_ID)FSM_TIMER, (RAK_TIMER_HANDLER)fsm::addToSensorDataQueue, RAK_TIMER_ONESHOT);
+  //   api.system.timer.start((RAK_TIMER_ID)FSM_TIMER, sleepDuration, (void *)1);
+  // }
+  // if (fsm::isSensorDataQueueEmpty() && !lora::isUplinkInProgress())
+  // {
+  //   DEBUG_SERIAL_LOG.printf("Attempting to sleep for %is...", sleepDuration / 1000);
+  //   DEBUG_SERIAL_LOG.println("state queue empty, lora complete, sleeping");
+  //   api.system.sleep.all();
+  //   DEBUG_SERIAL_LOG.println("Woke up");
+  // }
+  // else
+  // {
+  //   DEBUG_SERIAL_LOG_MORE.println("State queue not empty or lora not complete");
+  // }
+  lora::sendUplink("kappa"); 
+  api.system.timer.create((RAK_TIMER_ID)FSM_TIMER, (RAK_TIMER_HANDLER)fsm::addToSensorDataQueue, RAK_TIMER_ONESHOT);
+  api.system.timer.start((RAK_TIMER_ID)FSM_TIMER, 10000, (void *)1);
+  api.system.sleep.all(); // Sleep until next timer event
 }
 
 void resetEeprom()
