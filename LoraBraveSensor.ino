@@ -33,13 +33,13 @@ void setup()
 
 void loop()
 {
-  // int heartBeatTimer = heartbeat::getRemainingDuration();
-  // int uplinkTimer = lora::getRemainingDuration();
-  // int stateSleepTimer = fsm::handleState();
-  // DEBUG_SERIAL_LOG_MORE.printf("Heartbeat timer: %is, ", heartBeatTimer / 1000);
-  // DEBUG_SERIAL_LOG_MORE.printf("Uplink timer: %is", uplinkTimer / 1000);
-  // DEBUG_SERIAL_LOG_MORE.printf("State sleep timer: %is\r\n", stateSleepTimer / 1000);
-  // int sleepDuration = min(heartBeatTimer, min(uplinkTimer, stateSleepTimer));
+  int heartBeatTimer = heartbeat::getRemainingDuration();
+  int uplinkTimer = lora::getRemainingDuration();
+  int stateSleepTimer = fsm::handleState();
+  DEBUG_SERIAL_LOG_MORE.printf("Heartbeat timer: %is, ", heartBeatTimer / 1000);
+  DEBUG_SERIAL_LOG_MORE.printf("Uplink timer: %is", uplinkTimer / 1000);
+  DEBUG_SERIAL_LOG_MORE.printf("State sleep timer: %is\r\n", stateSleepTimer / 1000);
+  int sleepDuration = min(heartBeatTimer, min(uplinkTimer, stateSleepTimer));
 
   // if (sleepDuration > 0)
   // {
